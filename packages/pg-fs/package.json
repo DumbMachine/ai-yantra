@@ -1,0 +1,72 @@
+{
+  "name": "pg-fs",
+  "version": "0.1.0",
+  "description": "PostgreSQL-backed filesystem with AI SDK tools for building intelligent file management agents",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "lint": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "example:agent": "tsx examples/interactive-coding-agent.ts",
+    "example:basic": "tsx examples/basic.ts",
+    "example:workflows": "tsx examples/moar-workflows.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^2.0.27",
+    "@clack/prompts": "^0.11.0",
+    "ai": "^6.0.42",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.45.1",
+    "pg": "^8.18.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.8",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^1.6.0"
+  },
+  "peerDependencies": {
+    "@ai-sdk/openai": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@ai-sdk/openai": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "postgresql",
+    "filesystem",
+    "ai-sdk",
+    "agents",
+    "tools",
+    "file-management",
+    "drizzle",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

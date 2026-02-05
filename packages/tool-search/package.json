@@ -1,0 +1,21 @@
+{
+  "name": "@ai-sdk-monorepo/tool-search",
+  "version": "1.0.0",
+  "description": "Tool Search library for Vercel AI SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+   "dependencies": {
+     "ai": "6.0.42",
+     "wink-bm25-text-search": "^1.0.0",
+     "zod": "^3.23.8"
+   },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vitest": "^1.6.0",
+    "@vitest/coverage-v8": "^1.6.0"
+  },
+   "scripts": {
+     "build": "tsc",
+     "dev": "tsc --watch"
+   }
+}

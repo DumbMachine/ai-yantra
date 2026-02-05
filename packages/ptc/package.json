@@ -1,0 +1,23 @@
+{
+  "name": "@ai-sdk-monorepo/ptc",
+  "version": "1.0.0",
+  "description": "Programmable Tool Calling (PTC) library for Vercel AI SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "ai": "6.0.42",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.30",
+    "@vitest/coverage-v8": "^1.6.0",
+    "typescript": "^5.5.4",
+    "vitest": "^1.6.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage"
+  }
+}
