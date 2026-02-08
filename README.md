@@ -10,7 +10,10 @@ A complete filesystem implementation using PostgreSQL as storage backend, provid
 
 ### Why PostgreSQL as a Filesystem?
 
-AI Agents are great at using the file system to organize and interact with information. In a project, at https://www.krucible.app/, we needed a way to manage files without having to create a sandbox ( $$$ ) for user thread. So we created the abstraction over fs, that get's connected to a seperate database as the data store. 
+AI Agents are great at using the file system to organize and interact with information. In a project, at https://www.krucible.app/, we needed a way to manage files without having to create a sandbox ( $$$ ) for user thread. So we created the abstraction over fs, that get's connected to a seperate database as the data store. An abstraction that:
+- is not a per-thread sandbox
+- durable state
+- inspectable and debuggable
 
 ## Project Structure
 `pg-fs` is our first tool, with others on the way. 
@@ -24,6 +27,24 @@ packages/
 apps/
 └── pg-fs-demo/         
 ```
+
+## Features
+
+- PostgreSQL-backed filesystem with full operations (read, write, mkdir, unlink, rename, copy, glob, grep)
+- Content-addressable storage with deduplication
+- Hierarchical paths with efficient tree operations
+- AI SDK tools out of the box
+- Type-safe implementation with Drizzle ORM
+- Comprehensive filesystem API and garbage collection
+
+
+## pg-fs Updates Planned
+- `rm` command instead of unlink. Since most llms instinctively try `rm` first ( empirical )
+- `~/.skills` folder, so you can use skills in ai sdk.
+- `~/.memory` folder, to handle session memory. Inspo: from [anthropic's memory tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool)
+- Postgres RLS, to manage permissions / controls on files. 
+- Remove unused files ( system prompt and "@clack/prompts" and openai compatible provider )
+- sqlite backend, instead of postgres
 
 ## Quick Start
 
@@ -80,22 +101,3 @@ Make sure you are running [copilot api](https://github.com/ericc-ch/copilot-api)
 npx copilot-api@latest start --claude-code
 ```
 
-
-## What's New
-
-**pg-fs Implementation Complete** 🎉
-- ✅ PostgreSQL-backed filesystem with full operations (read, write, mkdir, unlink, rename, copy, glob, grep)
-- ✅ Content-addressable storage with automatic deduplication
-- ✅ Hierarchical paths with efficient tree operations
-- ✅ AI SDK integration with pre-built tools for agents
-- ✅ Type-safe implementation with Drizzle ORM
-- ✅ Comprehensive filesystem API and garbage collection
-
-
-## pg-fs Updates Planned
-- `rm` command instead of unlink. Since most llms instinctively try `rm` first ( empirical )
-- `~/.skills` folder, so you can use skills in ai sdk.
-- `~/.memory` folder, to handle session memory. Inspo: from [anthropic's memory tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool)
-- Postgres RLS, to manage permissions / controls on files. 
-- Remove unused files ( system prompt and "@clack/prompts" and openai compatible provider )
-- sqlite backend, instead of postgres
