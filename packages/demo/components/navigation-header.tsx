@@ -5,7 +5,7 @@ import {
 	NavigationMenuContent,
 	NavigationMenuItem,
 	NavigationMenuList,
-	NavigationMenuTrigger
+	NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import { Code2, Database, Search, Terminal } from "lucide-react";
@@ -59,7 +59,7 @@ export function DemosMenu({
 						Demos
 					</NavigationMenuTrigger>
 					<NavigationMenuContent>
-						<div className="w-[400px] p-2">
+						<div className="w-100 p-2">
 							<div className="mb-2 px-2 py-1.5 text-xs font-medium text-muted-foreground">
 								Choose a demo
 							</div>
@@ -128,8 +128,8 @@ export function DemosMenu({
 export function Header() {
 	return (
 		<header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-			<div className="flex h-14 items-center px-4 gap-4">
-				<Link href="/" className="flex items-center gap-2 font-semibold">
+			<div className="flex h-14 items-center px-4">
+				<Link href="/" className="flex items-center gap-x-2 font-semibold">
 					<span className="text-sm">CIPHER</span>
 				</Link>
 			</div>

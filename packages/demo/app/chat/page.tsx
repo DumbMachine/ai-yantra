@@ -378,8 +378,8 @@ const Example = () => {
 	const usedTokens = usage?.totalTokens ?? 0;
 
 	return (
-		<div className="flex h-[calc(100vh-56px)]">
-			{/* Show file panel for pg-fs demo */}
+		// <div className="flex h-[calc(100vh-1px)]">
+		<div className="flex h-full">
 			{activeDemo === "pg-fs" && (
 				<PgFsFilePanel isActive={activeDemo === "pg-fs"} />
 			)}
@@ -562,16 +562,6 @@ const Example = () => {
 											<PromptInputActionAddAttachments />
 										</PromptInputActionMenuContent>
 									</PromptInputActionMenu>
-									<PromptInputButton
-										onClick={toggleWebSearch}
-										variant={useWebSearch ? "default" : "ghost"}
-										aria-label={
-											useWebSearch ? "Disable web search" : "Enable web search"
-										}
-									>
-										<GlobeIcon size={16} />
-										<span>Search</span>
-									</PromptInputButton>
 									<ModelSelector
 										onOpenChange={setModelSelectorOpen}
 										open={modelSelectorOpen}
@@ -629,7 +619,7 @@ const Example = () => {
 
 export default function Page() {
 	return (
-		<div className="h-[calc(100vh-56px)] w-full">
+		<div className="h-[calc(100vh-80px)] w-full">
 			<Example />
 		</div>
 	);

@@ -16,14 +16,14 @@
 
 ```bash
 # Install in your AI SDK project
-pnpm add @ai-sdk-monorepo/ptc
+pnpm add @ai-yantra/ptc
 ```
 
 ### Basic Usage
 
 ```typescript
 import { streamText } from 'ai';
-import { createPTC } from '@ai-sdk-monorepo/ptc';
+import { createPTC } from '@ai-yantra/ptc';
 import { openai } from '@ai-sdk/openai';
 import { tool } from 'ai';
 import { z } from 'zod';
@@ -360,7 +360,7 @@ import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 
 // Add PTC capability
-import { createPTC } from '@ai-sdk-monorepo/ptc';
+import { createPTC } from '@ai-yantra/ptc';
 
 const ptc = createPTC(yourExistingTools);
 

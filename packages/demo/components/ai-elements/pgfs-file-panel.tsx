@@ -1,14 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Loader2, Folder, RefreshCw } from "lucide-react";
 import {
 	FileTree,
-	FileTreeFolder,
 	FileTreeFile,
+	FileTreeFolder,
 } from "@/components/ai-elements/file-tree";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Folder, Loader2, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 interface FileNode {
 	name: string;
@@ -92,7 +92,7 @@ export function PgFsFilePanel({
 		<div className="flex flex-col h-full border-r bg-muted/30 w-72">
 			<div className="flex items-center gap-2 px-3 py-2 border-b h-12">
 				<Folder className="size-3.5 text-muted-foreground" />
-				<span className="text-xs font-medium">pg-fs Files</span>
+				<span className="text-sm font-medium">pg-fs Files</span>
 				<Button
 					variant="ghost"
 					size="sm"
@@ -109,20 +109,17 @@ export function PgFsFilePanel({
 			</div>
 			<ScrollArea className="flex-1">
 				{sortedFiles.length === 0 ? (
-					<div className="p-4 text-[10px] text-muted-foreground text-center">
+					<div className="p-4 text-sm text-muted-foreground text-center">
 						No files yet. Start coding to create some!
 					</div>
 				) : (
 					<div className="p-2">
 						<FileTree
 							selectedPath={internalSelectedPath}
-							// eslint-disable-next-line @typescript-eslint/no-explicit-any
-							onSelect={
-								((path: string) => {
-									setInternalSelectedPath(path);
-									onFileSelect?.(path);
-								}) as any
-							}
+							onSelect={(path: string) => {
+								setInternalSelectedPath(path);
+								onFileSelect?.(path);
+							}}
 							className="border-0 bg-transparent"
 						>
 							{renderFileTree(sortedFiles)}

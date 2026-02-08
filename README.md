@@ -1,53 +1,71 @@
-# CIPHER
+# pg-fs 
 
-CIPHER is a minimalist collection of extensions for the AI SDK. We don't just build tools—we craft the invisible threads that connect intelligence to action.
+**pg-fs** is a PostgreSQL-backed filesystem with AI SDK tools for building intelligent file management agents.
 
-## 001 // TOOL SEARCH ✅
+A complete filesystem implementation using PostgreSQL as storage backend, providing full filesystem operations, content-addressable storage with automatic deduplication, hierarchical paths, full-text search, and seamless AI SDK integration.
 
-Our foundation piece: **Tool Search**.
+<video width="640" height="360" controls>
+  <source src="./static/demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
-A dynamic discovery system that finds and deploys tools through intelligent pattern matching. No excess. Pure function. Maximum efficiency.
 
-Inspired by Anthropic's advanced tool use engineering: https://www.anthropic.com/engineering/advanced-tool-use
 
-## 002 // PTC ✅
+### Why PostgreSQL as a Filesystem?
 
-**Programmable Tool Calling** - Live and functional.
-
-Enables LLMs to execute JavaScript code with access to AI SDK tools in a secure Node.js VM sandbox. Maximum efficiency through unified execution environment.
-
-```bash
-# Quick start
-cd apps/ptc-demo
-pnpm simple
-```
-
-**Status**: ✅ Core package complete, ✅ Working demos, ✅ Production ready
-
-## 003-005 // COMING SOON
-
-- **ACCESS** // Approval workflows & security  
-- **CACHE** // Intelligent result persistence  
-- **ASYNC** // Parallel sub-agent orchestration  
-
-Each piece designed for seamless integration. Built for scale. Engineered for performance.
+AI Agents are great at using the file system to organize and interact with information. In a project, at https://www.krucible.app/, we needed a way to manage files without having to create a sandbox ( $$$ ) for user thread. So we created the abstraction over fs, that get's connected to a seperate database as the data store. 
 
 ## Project Structure
-
+`pg-fs` is our first tool, with others on the way. 
 ```
 packages/
-├── tool-search/          # 001 - Dynamic tool discovery
-├── ptc/                  # 002 - Programmable Tool Calling ✅
-├── access/               # 003 - Approval workflows (planned)
-├── cache/                # 004 - Result persistence (planned)
-└── async/                # 005 - Sub-agent orchestration (planned)
+├── pg-fs/             # PostgreSQL-backed filesystem ✅
+├── tool-search/       # Anthropic style `tool-search` tool, so you can over your agents with tools without impacting it's context
+├── ptc/               # Approval workflows & security (planned)
+└── task/              # Task ( read / write ), with serialization primitives, so your agents can make plans like claude code
 
 apps/
-├── tool-search-demo/     # Tool Search examples
-└── ptc-demo/             # PTC examples and documentation ✅
+└── pg-fs-demo/           # pg-fs examples (coming soon)
 ```
 
 ## Quick Start
+
+Install it from npm
+```bash
+pnpm install pg-fs
+```
+
+
+### Try pg-fs
+```typescript
+import { Pool } from 'pg';
+import { PgFs } from 'pg-fs';
+import { ToolLoopAgent } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+const pool = new Pool({
+  connectionString: 'postgresql://localhost:5432/mydb',
+});
+
+// Initialize pg-fs (creates tables automatically)
+const pgfs = await PgFs.create({ pool });
+
+// Use with AI agents
+const agent = new ToolLoopAgent({
+  model: openai('gpt-4'),
+  instructions: 'You are a helpful file management assistant.',
+  tools: pgfs.tools, // Pre-built filesystem tools
+});
+
+const result = await agent.generate({
+  prompt: 'Create a project structure for a Node.js app with src/, tests/, and README.md',
+});
+
+console.log(result.text);
+```
+
+
+## Development
 
 ### Install Dependencies
 ```bash
@@ -55,34 +73,28 @@ pnpm install
 pnpm build
 ```
 
-### Try PTC (Programmable Tool Calling)
+Try the demo app:
 ```bash
-cd apps/ptc-demo
-pnpm simple  # Simple example
-pnpm dev     # Full interactive demo
+DATABASE_URL=postgresql://postgres:password@localhost:5432/pg_fs pnpm dev
 ```
 
-### Try Tool Search  
-```bash
-cd apps/tool-search-demo
-pnpm dev
-```
+Make sure you are running [copilot api](https://github.com/ericc-ch/copilot-api), if you use the copilot model provider. Else Anthropic and Openai is also supported.
+
 
 ## What's New
 
-**PTC Implementation Complete** 🎉
-- ✅ JavaScript execution in secure VM sandbox
-- ✅ AI SDK tool integration with proper schema handling
-- ✅ Comprehensive error handling and timeout protection  
-- ✅ Function signature generation for LLM context
-- ✅ Multiple configuration options and debug modes
-- ✅ Working examples with weather/email tools
-- ✅ Full documentation and troubleshooting guides
+**pg-fs Implementation Complete** 🎉
+- ✅ PostgreSQL-backed filesystem with full operations (read, write, mkdir, unlink, rename, copy, glob, grep)
+- ✅ Content-addressable storage with automatic deduplication
+- ✅ Hierarchical paths with efficient tree operations
+- ✅ Full-text search using PostgreSQL's search capabilities
+- ✅ AI SDK integration with pre-built tools for agents
+- ✅ Type-safe implementation with Drizzle ORM
+- ✅ Comprehensive filesystem API and garbage collection
+- ✅ Working examples and full documentation
 
-**Architecture Highlights**:
-- Unified JavaScript environment reduces context switching
-- VM-based security with timeout and memory protection
-- Seamless integration with any AI SDK provider
-- Complex workflow support with loops, conditions, data processing
 
-*Less is more. Code is fashion.*
+## pg-fs Updates Planned
+- `~/.skills` folder, so you can use skills in ai sdk.
+- `~/.memory` folder, to handle session memory. Inspo: from [anthropic's memory tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool)
+- Postgres RLS, to manage permissions / controls on files. 

@@ -1,18 +1,18 @@
+import { allTools, TOTAL_TOOLS } from "@/lib/example-tools";
+import { ptcTools } from "@/lib/ptc-tools";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import {
 	convertToModelMessages,
 	createUIMessageStream,
 	createUIMessageStreamResponse,
-	LanguageModelUsage,
+	type LanguageModelUsage,
 	streamText,
 	type UIMessage,
 } from "ai";
-import { createToolSearch } from "@ai-sdk-monorepo/tool-search";
-import { createPTC } from "@ai-sdk-monorepo/ptc";
-import { allTools, TOTAL_TOOLS } from "@/lib/example-tools";
-import { ptcTools, PTC_TOOLS_COUNT } from "@/lib/ptc-tools";
 import { Pool } from "pg";
 import { PgFs, TestSystemPrompt } from "pg-fs";
+import { createPTC } from "ptc";
+import { createToolSearch } from "tool-search";
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
@@ -288,7 +288,9 @@ Be concise and helpful in your responses.`,
 						writer.write({
 							type: "data-active-tools",
 							data: {
-								activeTools: toolSearch.activeTools.map((t) => t.defer_loading ? `${t.name} (deferred)` : t.name),
+								activeTools: toolSearch.activeTools.map((t) =>
+									t.defer_loading ? `${t.name} (deferred)` : t.name,
+								),
 								totalTools: TOTAL_TOOLS,
 								strategy: "regex",
 							},
@@ -447,11 +449,15 @@ async function handlePgFs(messages: UIMessage[], modelName: string) {
 	}
 }
 
-async function handlePTC(messages: UIMessage[], modelName: string, usePTC: boolean = true) {
+async function handlePTC(
+	messages: UIMessage[],
+	modelName: string,
+	usePTC: boolean = true,
+) {
 	// Initialize PTC with expense management tools
 	const ptc = createPTC(ptcTools, {
 		timeout: 5000,
-		toolName: 'execute_javascript'
+		toolName: "execute_javascript",
 	});
 
 	const xmessages = await convertToModelMessages(messages);
@@ -466,7 +472,8 @@ async function handlePTC(messages: UIMessage[], modelName: string, usePTC: boole
 
 				const result = streamText({
 					model: lmstudio(modelName || "grok-code-fast-1"),
-					system: usePTC ? `You are a helpful AI assistant with access to JavaScript execution capabilities for complex expense management workflows.
+					system: usePTC
+						? `You are a helpful AI assistant with access to JavaScript execution capabilities for complex expense management workflows.
 
 # Core Behavior
 
@@ -514,7 +521,8 @@ for (const member of team.data) {
 }
 \`\`\`
 
-The JavaScript executor will run your code and return console output.` : `You are a helpful AI assistant with access to individual tools for expense management.
+The JavaScript executor will run your code and return console output.`
+						: `You are a helpful AI assistant with access to individual tools for expense management.
 
 # Available Tools
 

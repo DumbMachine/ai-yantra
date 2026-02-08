@@ -27,12 +27,6 @@ importers:
 
   packages/demo:
     dependencies:
-      '@ai-sdk-monorepo/ptc':
-        specifier: workspace:*
-        version: link:../ptc
-      '@ai-sdk-monorepo/tool-search':
-        specifier: workspace:*
-        version: link:../tool-search
       '@ai-sdk/openai-compatible':
         specifier: ^2.0.27
         version: 2.0.27(zod@3.25.76)
@@ -93,6 +87,9 @@ importers:
       pg-fs:
         specifier: workspace:*
         version: link:../pg-fs
+      ptc:
+        specifier: workspace:*
+        version: link:../ptc
       react:
         specifier: 19.2.3
         version: 19.2.3
@@ -117,6 +114,9 @@ importers:
       tokenlens:
         specifier: ^1.3.1
         version: 1.3.1
+      tool-search:
+        specifier: workspace:*
+        version: link:../tool-search
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0

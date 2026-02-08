@@ -1,4 +1,4 @@
-import { tool } from "@ai-sdk-monorepo/tool-search";
+import { tool } from "tool-search";
 import { z } from "zod";
 
 // ====================================================================
