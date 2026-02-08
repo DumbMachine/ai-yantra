@@ -10,7 +10,7 @@ A complete filesystem implementation using PostgreSQL as storage backend, provid
 
 ### Why PostgreSQL as a Filesystem?
 
-AI Agents are great at using the file system to organize and interact with information. In a project, at https://www.krucible.app/, we needed a way to manage files without having to create a sandbox ( $$$ ) for user thread. So we created the abstraction over fs, that get's connected to a seperate database as the data store. An abstraction that:
+AI Agents are great at using the file system to organize and interact with information. In a project, at https://www.krucible.app/, we needed a way to manage files without having to create a sandbox ( $$$ ) for user thread. So we created the abstraction over fs, that connects to postgres databases as the data store. An abstraction that:
 - is not a per-thread sandbox
 - durable state
 - inspectable and debuggable

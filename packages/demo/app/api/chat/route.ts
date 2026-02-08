@@ -1,18 +1,19 @@
 import { allTools, TOTAL_TOOLS } from "@/lib/example-tools";
-import { ptcTools } from "@/lib/ptc-tools";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import {
+	LanguageModelUsage,
+	UIMessage,
 	convertToModelMessages,
 	createUIMessageStream,
 	createUIMessageStreamResponse,
-	type LanguageModelUsage,
 	streamText,
-	type UIMessage,
 } from "ai";
+import { getModelProvider } from "@/lib/utils";
+import { LanguageModel } from "ai";
 import { Pool } from "pg";
 import { PgFs, TestSystemPrompt } from "pg-fs";
 import { createPTC } from "ptc";
 import { createToolSearch } from "tool-search";
+import { ptcTools } from "@/lib/ptc-tools";
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
