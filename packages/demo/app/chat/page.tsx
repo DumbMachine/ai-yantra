@@ -76,6 +76,7 @@ import { PTCPanel } from "@/components/ai-elements/ptc-panel";
 import { DemosMenu } from "@/components/navigation-header";
 import { cn } from "@/lib/utils";
 import { TOTAL_TOOLS } from "@/lib/example-tools";
+import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 
 // Demo configurations
 type DemoType = "chat" | "pg-fs" | "programmable-calls" | "tool-search";
@@ -118,6 +119,20 @@ const demos: DemoConfig[] = [
 		apiEndpoint: "/api/chat",
 	},
 ];
+
+const suggestionsMap: Map<DemoType, string[]> = new Map([
+	[
+		"pg-fs",
+		[
+			"What's in the markting folder?",
+			"Create a haiku about postgres as a file system",
+			"Put that into a new folder for haikus",
+		],
+	],
+	["programmable-calls", []],
+	["tool-search", []],
+	["chat", []],
+]);
 
 // Model definitions with provider/model format
 const models = [
@@ -193,6 +208,20 @@ const AttachmentItem = ({
 			<AttachmentRemove />
 		</Attachment>
 	);
+};
+
+const SuggestionItem = ({
+	suggestion,
+	onClick,
+}: {
+	suggestion: string;
+	onClick: (suggestion: string) => void;
+}) => {
+	const handleClick = useCallback(() => {
+		onClick(suggestion);
+	}, [onClick, suggestion]);
+
+	return <Suggestion onClick={handleClick} suggestion={suggestion} />;
 };
 
 const PromptInputAttachmentsDisplay = () => {
@@ -274,6 +303,13 @@ const Example = () => {
 	}>({});
 
 	const currentDemo = demos.find((d) => d.id === activeDemo) || demos[0];
+	const suggestions = useMemo(() => {
+		return suggestionsMap.get(activeDemo) || [];
+	}, [activeDemo]);
+
+	const handleSuggestionClick = useCallback((suggestion: string) => {
+		setText(suggestion);
+	}, []);
 
 	const { messages, sendMessage, status, error } = useChat({
 		transport: new DefaultChatTransport({
@@ -546,6 +582,15 @@ const Example = () => {
 				)}
 
 				<div className="grid shrink-0 gap-4 pt-4">
+					<Suggestions className="px-4">
+						{suggestions.map((suggestion) => (
+							<SuggestionItem
+								key={suggestion}
+								onClick={handleSuggestionClick}
+								suggestion={suggestion}
+							/>
+						))}
+					</Suggestions>
 					<div className="w-full px-4 pb-4">
 						<PromptInput globalDrop multiple onSubmit={handleSubmit}>
 							<PromptInputHeader>

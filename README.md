@@ -4,10 +4,7 @@
 
 A complete filesystem implementation using PostgreSQL as storage backend, providing full filesystem operations, content-addressable storage with automatic deduplication, hierarchical paths, full-text search, and seamless AI SDK integration.
 
-<video width="640" height="360" controls>
-  <source src="./static/demo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![pg-fs Demo](https://github.com/DumbMachine/pg-fs/blob/main/static/demo.gif?raw=true)
 
 
 
