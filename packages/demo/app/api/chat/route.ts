@@ -213,7 +213,7 @@ async function handleToolSearch(messages: UIMessage[], modelName: string) {
 				);
 
 				const result = streamText({
-					model: lmstudio(modelName || "grok-code-fast-1"),
+					model: lmstudio(modelName),
 					system: `You are a helpful AI assistant with access to tools for GitHub, Slack, Sentry, and Grafana integrations.
 
 # Core Behavior
@@ -381,7 +381,7 @@ async function handlePgFs(messages: UIMessage[], modelName: string) {
 					stepCount++;
 
 					const result = streamText({
-						model: lmstudio(modelName || "grok-code-fast-1"),
+						model: lmstudio(modelName),
 						system: TestSystemPrompt,
 						messages: xmessages,
 						tools: pgfs.tools as any,
@@ -471,7 +471,7 @@ async function handlePTC(
 				stepCount++;
 
 				const result = streamText({
-					model: lmstudio(modelName || "grok-code-fast-1"),
+					model: lmstudio(modelName),
 					system: usePTC
 						? `You are a helpful AI assistant with access to JavaScript execution capabilities for complex expense management workflows.
 

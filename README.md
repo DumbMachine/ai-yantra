@@ -22,7 +22,7 @@ packages/
 └── task/              # Task ( read / write ), with serialization primitives, so your agents can make plans like claude code
 
 apps/
-└── pg-fs-demo/           # pg-fs examples (coming soon)
+└── pg-fs-demo/         
 ```
 
 ## Quick Start
@@ -76,6 +76,9 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/pg_fs pnpm dev
 ```
 
 Make sure you are running [copilot api](https://github.com/ericc-ch/copilot-api), if you use the copilot model provider. Else Anthropic and Openai is also supported.
+```
+npx copilot-api@latest start --claude-code
+```
 
 
 ## What's New
@@ -84,14 +87,13 @@ Make sure you are running [copilot api](https://github.com/ericc-ch/copilot-api)
 - ✅ PostgreSQL-backed filesystem with full operations (read, write, mkdir, unlink, rename, copy, glob, grep)
 - ✅ Content-addressable storage with automatic deduplication
 - ✅ Hierarchical paths with efficient tree operations
-- ✅ Full-text search using PostgreSQL's search capabilities
 - ✅ AI SDK integration with pre-built tools for agents
 - ✅ Type-safe implementation with Drizzle ORM
 - ✅ Comprehensive filesystem API and garbage collection
-- ✅ Working examples and full documentation
 
 
 ## pg-fs Updates Planned
+- `rm` command instead of unlink. Since most llms instinctively try `rm` first ( empirical )
 - `~/.skills` folder, so you can use skills in ai sdk.
 - `~/.memory` folder, to handle session memory. Inspo: from [anthropic's memory tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool)
 - Postgres RLS, to manage permissions / controls on files. 
