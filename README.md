@@ -97,3 +97,5 @@ npx copilot-api@latest start --claude-code
 - `~/.skills` folder, so you can use skills in ai sdk.
 - `~/.memory` folder, to handle session memory. Inspo: from [anthropic's memory tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool)
 - Postgres RLS, to manage permissions / controls on files. 
+- Remove unused files ( system prompt and "@clack/prompts" and openai compatible provider )
+- sqlite backend, instead of postgres
