@@ -8,7 +8,7 @@ import {
 	NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import { Code2, Database, Search, Terminal } from "lucide-react";
+import { BookOpen, Code2, Database, Search, Terminal } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -32,6 +32,12 @@ export const demos = [
 		href: "/tool-search",
 		description: "Regex & BM25 tool discovery without context flooding",
 		icon: Search,
+	},
+	{
+		id: "skills",
+		title: "Agent Skills",
+		description: "Progressive skill loading from ~/.skills",
+		icon: BookOpen,
 	},
 	{
 		id: "chat",

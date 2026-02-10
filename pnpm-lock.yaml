@@ -57,6 +57,9 @@ importers:
       '@streamdown/mermaid':
         specifier: ^1.0.1
         version: 1.0.1(react@19.2.3)
+      agent-skills:
+        specifier: workspace:*
+        version: link:../skills
       ai:
         specifier: ^6.0.73
         version: 6.0.73(zod@3.25.76)
@@ -136,6 +139,9 @@ importers:
       '@types/node':
         specifier: ^20
         version: 20.19.30
+      '@types/pg':
+        specifier: ^8.16.0
+        version: 8.16.0
       '@types/react':
         specifier: ^19
         version: 19.2.13
@@ -221,6 +227,25 @@ importers:
         version: 1.6.1(vitest@1.6.1(@types/node@20.19.30)(lightningcss@1.30.2))
       typescript:
         specifier: ^5.5.4
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@20.19.30)(lightningcss@1.30.2)
+
+  packages/skills:
+    dependencies:
+      ai:
+        specifier: ^6.0.42
+        version: 6.0.73(zod@3.25.76)
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.30
+      typescript:
+        specifier: ^5.9.3
         version: 5.9.3
       vitest:
         specifier: ^1.6.0
