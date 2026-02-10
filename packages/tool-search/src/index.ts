@@ -74,7 +74,7 @@ Usage:
 			});
 
 			return {
-				message: `Found ${foundToolNames.length} fools. They are now available for use.`,
+				message: `Found ${foundToolNames.length} tools. They are now available for use.`,
 				tools: foundToolDetails,
 			};
 		},

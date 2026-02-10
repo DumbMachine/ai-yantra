@@ -1,103 +1,103 @@
-# Tool Search Library for Vercel AI SDK
+# Tool Search
 
-This package provides a Tool Search implementation for the Vercel AI SDK, allowing dynamic tool discovery using Regex or BM25 search strategies.
+**tool-search** lets you give your agent access to lots of tools without stuffing them all into the context window.
 
-## Installation
+## The Problem
 
-In your monorepo root, run:
-```bash
-pnpm install
+If you hand an LLM 50 tool definitions upfront, you're burning tokens on tools it'll never use in that conversation. Worse, too many tools can confuse the model.
+
+Tool search fixes this by hiding most tools behind a search step. The agent starts with only a few always-on tools plus a `tool_search` tool. When it needs something specific, it searches for it, and the tool gets activated for the rest of the conversation.
+
+```
+Step 1: Agent sees [always_on_tool, tool_search]
+Step 2: Agent calls tool_search("weather")
+Step 3: get_weather is now available
+Step 4: Agent calls get_weather({ location: "NYC" })
 ```
 
-## Build
+This is the same pattern Anthropic uses internally — lazy tool discovery.
+
+## Quick Start
 
 ```bash
-pnpm run build
+pnpm add tool-search
 ```
-
-This compiles the TypeScript code to the `dist/` directory.
-
-## Usage Example
-
-Here is how you use it in your application (e.g., a Next.js API route).
 
 ```typescript
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { tool, createToolSearch } from 'tool-search';
 import { z } from 'zod';
 
-// 1. Import from your lib
-import { tool } from './my-lib/tool';
-import { createToolSearch } from './my-lib/index';
-
-// 2. Define tools (some heavy ones deferred)
 const myTools = {
   get_weather: tool({
     description: 'Get the weather in a location',
-    parameters: z.object({ location: z.string() }),
+    inputSchema: z.object({ location: z.string() }),
     execute: async ({ location }) => ({ temp: 72, location }),
-    defer_loading: true, // <--- HIDDEN INITIALLY
+    defer_loading: true, // hidden until searched for
   }),
-  
+
   get_stock_price: tool({
     description: 'Get the stock price for a ticker',
-    parameters: z.object({ ticker: z.string() }),
+    inputSchema: z.object({ ticker: z.string() }),
     execute: async ({ ticker }) => ({ price: 150.00, ticker }),
-    defer_loading: true, // <--- HIDDEN INITIALLY
+    defer_loading: true, // hidden until searched for
   }),
 
   get_time: tool({
     description: 'Get current time',
-    parameters: z.object({}),
+    inputSchema: z.object({}),
     execute: async () => new Date().toISOString(),
-    defer_loading: false, // <--- ALWAYS VISIBLE
+    defer_loading: false, // always available
   }),
 };
 
-// 3. Initialize Tool Search
 const toolSearch = createToolSearch({
   tools: myTools,
   strategy: 'bm25', // or 'regex'
 });
 
-async function main() {
-  const result = await generateText({
-    model: openai('gpt-4o'),
-    prompt: 'What is the weather in San Francisco?',
-    
-    // 4. Pass the combined tools
-    tools: toolSearch.tools,
-    
-    // 5. Pass the prepareStep hook
-    prepareStep: toolSearch.prepareStep,
-    
-    // 6. Important: Enable multi-step so the model can search -> then call
-    maxSteps: 5, 
-    
-    // 7. Set initial active tools (optional, usually handled by prepareStep, 
-    // but good for the very first step if prepareStep logic relies on previous steps)
-    activeTools: toolSearch.activeTools, 
-  });
-
-  console.log(result.text);
-  console.log('Steps:', result.steps.length);
-}
-
-main();
+const result = await generateText({
+  model: openai('gpt-4o'),
+  prompt: 'What is the weather in San Francisco?',
+  tools: toolSearch.tools,
+  prepareStep: toolSearch.prepareStep,
+  activeTools: toolSearch.activeTools,
+  maxSteps: 5, // needs multi-step so the agent can search then call
+});
 ```
 
-## API Reference
+## How it works
 
-### `createToolSearch(options: ToolSearchOptions)`
+Mark tools with `defer_loading: true` to hide them initially. The agent gets a `tool_search` tool that finds matching tools by name and description.
 
-Creates a tool search instance.
+Two search strategies:
+- **regex** (default): The agent passes a regex pattern. Good for when the agent knows roughly what it's looking for (`"get_.*_data"`, `"(?i)slack"`).
+- **bm25**: TF-IDF based search. Returns top 5 matches, weighted toward tool name (2x) over description (1x). Better for fuzzy discovery.
 
-- `tools`: Object mapping tool names to tool definitions.
-- `strategy`: 'regex' or 'bm25' (default: 'regex').
-- `searchToolName`: Name for the search tool (default: 'tool_search').
+Once a tool is found, it stays active for the rest of the conversation — no need to search again.
 
-Returns an object with `tools`, `prepareStep`, and `activeTools`.
+## API
+
+### `createToolSearch(options)`
+
+```typescript
+const toolSearch = createToolSearch({
+  tools: myTools,           // your tool definitions
+  strategy: 'regex',        // 'regex' or 'bm25' (default: 'regex')
+  searchToolName: 'tool_search', // name for the search tool (default)
+});
+```
+
+Returns:
+- `tools` — all tools including the search tool, pass to AI SDK
+- `prepareStep` — hook that controls which tools are active each step
+- `activeTools` — initial set of active tool names
 
 ### `tool(options)`
 
-Wrapper around AI SDK's `tool` to support `defer_loading` flag.
+Wrapper around AI SDK's `tool` that adds the `defer_loading` flag.
+
+## License
+
+MIT
