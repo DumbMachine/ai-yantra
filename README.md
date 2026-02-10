@@ -20,8 +20,8 @@ AI Agents are great at using the file system to organize and interact with infor
 ```
 packages/
 ├── pg-fs/             # PostgreSQL-backed filesystem ✅
-├── tool-search/       # Anthropic style `tool-search` tool, so you can over your agents with tools without impacting it's context
-├── ptc/               # Approval workflows & security (planned)
+├── tool-search/       # Give your agent 100 tools without bloating its context. Tools are lazy-loaded — the agent discovers them as needed
+├── ptc/               # Programmable Tool Calling. Instead of one tool call per round-trip, the LLM writes JS that calls multiple tools in one shot
 └── task/              # Task ( read / write ), with serialization primitives, so your agents can make plans like claude code
 
 apps/
