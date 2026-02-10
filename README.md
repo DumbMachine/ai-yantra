@@ -16,16 +16,16 @@ AI Agents are great at using the file system to organize and interact with infor
 - inspectable and debuggable
 
 ## Project Structure
-`pg-fs` is our first tool, with others on the way. 
+`pg-fs` is our first published package, with others on the way.
 ```
 packages/
-├── pg-fs/             # PostgreSQL-backed filesystem ✅
+├── pg-fs/             # PostgreSQL-backed filesystem ( published on npm )
+├── skills/            # Skill discovery + loading for AI SDK agents (file-based or virtual)
 ├── tool-search/       # Give your agent 100 tools without bloating its context. Tools are lazy-loaded — the agent discovers them as needed
-├── ptc/               # Programmable Tool Calling. Instead of one tool call per round-trip, the LLM writes JS that calls multiple tools in one shot
-└── task/              # Task ( read / write ), with serialization primitives, so your agents can make plans like claude code
+└── ptc/               # Programmable Tool Calling. Instead of one tool call per round-trip, the LLM writes JS that calls multiple tools in one shot
 
 apps/
-└── pg-fs-demo/         
+└── demo/
 ```
 
 ## Features
