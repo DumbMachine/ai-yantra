@@ -1,4 +1,4 @@
-import type { Tool } from "ai";
+import { type Tool, tool as aiTool } from "ai";
 import { z } from "zod";
 import { bm25Strategy, regexStrategy, type SearchStrategy } from "./search";
 import { tool } from "./tool";
@@ -29,7 +29,7 @@ export function createToolSearch({
 		strategy === "bm25" ? bm25Strategy : regexStrategy;
 
 	// 4. Create the Search Tool
-	const searchTool = tool({
+	const searchTool = (aiTool as Function)({
 		description: `Searches for available tools using regex patterns. You can access any tool by searching for matching names or descriptions.
 
 Usage:

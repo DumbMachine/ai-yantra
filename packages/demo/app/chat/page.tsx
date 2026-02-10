@@ -50,7 +50,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { CheckIcon, Code2, Database, GlobeIcon, Search } from "lucide-react";
+import { BookOpen, CheckIcon, Code2, Database, GlobeIcon, Search } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -79,7 +79,7 @@ import { TOTAL_TOOLS } from "@/lib/example-tools";
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 
 // Demo configurations
-type DemoType = "chat" | "pg-fs" | "programmable-calls" | "tool-search";
+type DemoType = "chat" | "pg-fs" | "programmable-calls" | "tool-search" | "skills";
 
 interface DemoConfig {
 	id: DemoType;
@@ -118,6 +118,13 @@ const demos: DemoConfig[] = [
 		icon: Search,
 		apiEndpoint: "/api/chat",
 	},
+	{
+		id: "skills",
+		name: "Agent Skills",
+		description: "Progressive skill loading from ~/.skills",
+		icon: BookOpen,
+		apiEndpoint: "/api/chat",
+	},
 ];
 
 const suggestionsMap: Map<DemoType, string[]> = new Map([
@@ -131,6 +138,16 @@ const suggestionsMap: Map<DemoType, string[]> = new Map([
 	],
 	["programmable-calls", []],
 	["tool-search", []],
+	[
+		"skills",
+		[
+			"Design a REST API for a todo app",
+			"Review this code: function add(a,b){return a+b}",
+			"What's the best git branching strategy for a small team?",
+			"Show me the security checklist for code reviews",
+			"Generate an OpenAPI spec for a users endpoint",
+		],
+	],
 	["chat", []],
 ]);
 

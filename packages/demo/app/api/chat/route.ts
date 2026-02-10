@@ -1,19 +1,20 @@
+import { exampleSkills } from "@/lib/example-skills";
 import { allTools, TOTAL_TOOLS } from "@/lib/example-tools";
+import { ptcTools } from "@/lib/ptc-tools";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { Skills } from "agent-skills";
 import {
-	LanguageModelUsage,
-	UIMessage,
 	convertToModelMessages,
 	createUIMessageStream,
 	createUIMessageStreamResponse,
+	LanguageModelUsage,
 	streamText,
+	UIMessage,
 } from "ai";
-import { getModelProvider } from "@/lib/utils";
-import { LanguageModel } from "ai";
 import { Pool } from "pg";
 import { PgFs, TestSystemPrompt } from "pg-fs";
 import { createPTC } from "ptc";
 import { createToolSearch } from "tool-search";
-import { ptcTools } from "@/lib/ptc-tools";
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
@@ -135,7 +136,7 @@ export async function POST(req: Request) {
 	}: {
 		messages: UIMessage[];
 		model: string;
-		activeDemo: "pg-fs" | "tool-search" | "programmable-calls";
+		activeDemo: "pg-fs" | "tool-search" | "programmable-calls" | "skills";
 		usePTC?: boolean;
 	} = await req.json();
 
@@ -162,6 +163,8 @@ export async function POST(req: Request) {
 		return handlePgFs(messages, modelName);
 	} else if (demo === "programmable-calls") {
 		return handlePTC(messages, modelName, usePTC ?? true);
+	} else if (demo === "skills") {
+		return handleSkills(messages, modelName);
 	} else if (demo === "basic") {
 		return handleBasic(messages, modelName);
 	} else {
@@ -289,9 +292,7 @@ Be concise and helpful in your responses.`,
 						writer.write({
 							type: "data-active-tools",
 							data: {
-								activeTools: toolSearch.activeTools.map((t) =>
-									t.defer_loading ? `${t.name} (deferred)` : t.name,
-								),
+								activeTools: toolSearch.activeTools,
 								totalTools: TOTAL_TOOLS,
 								strategy: "regex",
 							},
@@ -605,6 +606,93 @@ Use these tools individually to complete tasks. Each tool call will be executed 
 		consumeSseStream: () => {
 			// todo: store for resumable stream
 		},
+	});
+}
+
+async function handleSkills(messages: UIMessage[], modelName: string) {
+	const skills = Skills.fromDefinitions(exampleSkills);
+
+	const xmessages = await convertToModelMessages(messages);
+
+	const stream = createUIMessageStream<UIMessage<UsageEvent>>({
+		execute: async ({ writer }) => {
+			const maxSteps = 15;
+			let stepCount = 0;
+
+			while (stepCount < maxSteps) {
+				stepCount++;
+
+				const result = streamText({
+					model: lmstudio(modelName),
+					system: `You are a helpful AI assistant with access to specialized skills.
+
+# Core Behavior
+
+- Be concise, direct, and action-oriented
+- Execute tasks autonomously without asking for permission
+- Use skills when the user's request matches a skill description
+- After loading a skill, follow its instructions precisely
+- Use readSkillFile to access any referenced files (scripts, references, assets)
+
+# Skills Workflow
+
+1. When a user's request matches a skill, call loadSkill to get the instructions
+2. Follow the loaded instructions step-by-step
+3. Use readSkillFile to access any files mentioned in the skill instructions
+4. Apply the skill's guidelines to produce the output
+
+${skills.buildPrompt()}`,
+					messages: xmessages,
+					tools: skills.tools as any,
+					onStepFinish: async ({ usage }) => {
+						writer.write({
+							type: "data-usage",
+							data: usage,
+						} as UsageEvent);
+					},
+					onFinish: async ({ usage }) => {
+						writer.write({
+							type: "data-usage",
+							data: usage,
+						} as UsageEvent);
+					},
+				});
+
+				result.consumeStream();
+
+				await new Promise<void>((resolve, reject) => {
+					writer.merge(
+						result.toUIMessageStream({
+							sendReasoning: true,
+							onFinish: () => {
+								resolve();
+							},
+							onError: (error) => {
+								reject(error);
+								return "error";
+							},
+						}),
+					);
+				});
+
+				const finishReason = await result.finishReason;
+				if (finishReason !== "tool-calls") {
+					break;
+				}
+
+				const ymessages = (await result.response).messages;
+				xmessages.push(...ymessages);
+
+				console.log(
+					`[Skills] Continuing to step ${stepCount + 1} due to tool-calls`,
+				);
+			}
+		},
+	});
+
+	return createUIMessageStreamResponse({
+		stream,
+		consumeSseStream: () => {},
 	});
 }
 
