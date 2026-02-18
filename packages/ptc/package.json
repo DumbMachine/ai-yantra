@@ -1,5 +1,5 @@
 {
-  "name": "ptc",
+  "name": "@yantra/ptc",
   "version": "1.0.0",
   "description": "Programmable Tool Calling (PTC) library for Vercel AI SDK",
   "main": "dist/index.js",

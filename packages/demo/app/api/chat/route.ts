@@ -2,7 +2,7 @@ import { exampleSkills } from "@/lib/example-skills";
 import { allTools, TOTAL_TOOLS } from "@/lib/example-tools";
 import { ptcTools } from "@/lib/ptc-tools";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { Skills } from "agent-skills";
+import { Skills } from "@yantra/skills";
 import {
 	convertToModelMessages,
 	createUIMessageStream,
@@ -12,10 +12,10 @@ import {
 	UIMessage,
 } from "ai";
 import { Pool } from "pg";
-import { PgFs, TestSystemPrompt } from "pg-fs";
-import { createMemory, memorySystemPrompt } from "memory";
-import { createPTC } from "ptc";
-import { createToolSearch } from "tool-search";
+import { PgFs, TestSystemPrompt } from "@yantra/pg-fs";
+import { createMemory, memorySystemPrompt } from "@yantra/memory";
+import { createPTC } from "@yantra/ptc";
+import { createToolSearch } from "@yantra/tool-search";
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;

@@ -1,5 +1,5 @@
 {
-  "name": "agent-skills",
+  "name": "@yantra/skills",
   "version": "0.1.0",
   "description": "Skill discovery and loading for AI SDK agents via ~/.skills folder",
   "type": "module",

@@ -1,14 +1,12 @@
-# pg-fs 
+# Yantra
 
-**pg-fs** is a PostgreSQL-backed filesystem with AI SDK tools for building intelligent file management agents.
+**Yantra** is a collection of `@yantra/` scoped packages for building intelligent AI agents with the Vercel AI SDK.
 
-A complete filesystem implementation using PostgreSQL as storage backend, providing full filesystem operations, content-addressable storage with automatic deduplication, hierarchical paths, full-text search, and seamless AI SDK integration.
-
-![pg-fs Demo](https://github.com/DumbMachine/pg-fs/blob/main/static/demo.gif?raw=true)
+![Yantra Demo](https://github.com/DumbMachine/pg-fs/blob/main/static/demo.gif?raw=true)
 
 
 
-### Why PostgreSQL as a Filesystem?
+### Why Yantra?
 
 AI Agents are great at using the file system to organize and interact with information. In a project, at https://www.krucible.app/, we needed a way to manage files without having to create a sandbox ( $$$ ) for user thread. So we created the abstraction over fs, that connects to postgres databases as the data store. An abstraction that:
 - is not a per-thread sandbox
@@ -16,16 +14,17 @@ AI Agents are great at using the file system to organize and interact with infor
 - inspectable and debuggable
 
 ## Project Structure
-`pg-fs` is our first published package, with others on the way.
+
 ```
 packages/
-├── pg-fs/             # PostgreSQL-backed filesystem ( published on npm )
-├── skills/            # Skill discovery + loading for AI SDK agents (file-based or virtual)
-├── tool-search/       # Give your agent 100 tools without bloating its context. Tools are lazy-loaded — the agent discovers them as needed
-└── ptc/               # Programmable Tool Calling. Instead of one tool call per round-trip, the LLM writes JS that calls multiple tools in one shot
+├── pg-fs/             # @yantra/pg-fs — PostgreSQL-backed filesystem ( published on npm )
+├── memory/            # @yantra/memory — AI SDK Memory Tools backed by SQLite via pg-fs
+├── skills/            # @yantra/skills — Skill discovery + loading for AI SDK agents (file-based or virtual)
+├── tool-search/       # @yantra/tool-search — Give your agent 100 tools without bloating its context. Tools are lazy-loaded — the agent discovers them as needed
+└── ptc/               # @yantra/ptc — Programmable Tool Calling. Instead of one tool call per round-trip, the LLM writes JS that calls multiple tools in one shot
 
 apps/
-└── demo/
+└── demo/              # @yantra/demo — Demo application
 ```
 
 ## Features
@@ -38,26 +37,18 @@ apps/
 - Comprehensive filesystem API and garbage collection
 
 
-## pg-fs Updates Planned
-- `rm` command instead of unlink. Since most llms instinctively try `rm` first ( empirical )
-- `~/.skills` folder, so you can use skills in ai sdk.
-- `~/.memory` folder, to handle session memory. Inspo: from [anthropic's memory tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool)
-- Postgres RLS, to manage permissions / controls on files. 
-- Remove unused files ( system prompt and "@clack/prompts" and openai compatible provider )
-- sqlite backend, instead of postgres
-
 ## Quick Start
 
 Install it from npm
 ```bash
-pnpm install pg-fs
+pnpm install @yantra/pg-fs
 ```
 
 
-### Try pg-fs
+### Try @yantra/pg-fs
 ```typescript
 import { Pool } from 'pg';
-import { PgFs } from 'pg-fs';
+import { PgFs } from '@yantra/pg-fs';
 import { ToolLoopAgent } from 'ai';
 import { openai } from '@ai-sdk/openai';
 

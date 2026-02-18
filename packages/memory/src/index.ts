@@ -2,7 +2,7 @@ import { Memory } from "./memory.js";
 import { createMemoryTools, type MemoryTools } from "./tools.js";
 import { memorySystemPrompt } from "./system-prompt.js";
 import type { MemoryConfig } from "./types.js";
-import type { DbFs } from "pg-fs";
+import type { DbFs } from "@yantra/pg-fs";
 
 export { Memory } from "./memory.js";
 export { createMemoryTools, type MemoryTools } from "./tools.js";

@@ -1,4 +1,4 @@
-import { FileSystemUtils } from "pg-fs";
+import { FileSystemUtils } from "@yantra/pg-fs";
 
 const MEMORIES_PREFIX = "/memories";
 

@@ -1,4 +1,4 @@
-import type { SkillDefinition } from "agent-skills";
+import type { SkillDefinition } from "@yantra/skills";
 
 export const exampleSkills: SkillDefinition[] = [
 	{

@@ -1,10 +1,10 @@
 # AGENTS.md
 
-This file provides context for AI coding assistants working with the CIPHER repository.
+This file provides context for AI coding assistants working with the Yantra repository.
 
 ## Project Overview
 
-**CIPHER** is a minimalist collection of extensions for the AI SDK. We don't just build tools—we craft the invisible threads that connect intelligence to action.
+**Yantra** is a minimalist collection of `@yantra/` scoped extensions for the AI SDK. We don't just build tools—we craft the invisible threads that connect intelligence to action.
 
 - **Repository**: https://github.com/dumbmachine/ai-sdk-clothes
 - **Inspiration**: Anthropic's advanced tool use engineering (https://www.anthropic.com/engineering/advanced-tool-use)
@@ -16,16 +16,14 @@ This is a **monorepo** using pnpm workspaces.
 
 ### Key Directories
 
-| Directory               | Description                                      |
-| ----------------------- | ------------------------------------------------ |
-| `packages/tool-search`  | Tool Search utility package                      |
-| `packages/ptc`          | Programmable Tool Calling (live)                 |
-| `packages/pg-fs`        | PostgreSQL-backed filesystem with AI SDK tools   |
-| `packages/access`       | Approval workflows & security (coming soon)      |
-| `packages/cache`        | Intelligent result persistence (coming soon)     |
-| `packages/async`        | Parallel sub-agent orchestration (coming soon)   |
-| `apps/tool-search-demo` | Demo application for Tool Search                 |
-| `apps/ptc-demo`         | Demo application for PTC                         |
+| Directory               | Package Name           | Description                                      |
+| ----------------------- | ---------------------- | ------------------------------------------------ |
+| `packages/pg-fs`        | `@yantra/pg-fs`        | PostgreSQL-backed filesystem with AI SDK tools   |
+| `packages/memory`       | `@yantra/memory`       | AI SDK Memory Tools backed by SQLite via pg-fs   |
+| `packages/skills`       | `@yantra/skills`       | Skill discovery + loading for AI SDK agents      |
+| `packages/tool-search`  | `@yantra/tool-search`  | Tool Search utility package                      |
+| `packages/ptc`          | `@yantra/ptc`          | Programmable Tool Calling (live)                 |
+| `packages/demo`         | `@yantra/demo`         | Demo application (private)                       |
 
 ## Development Setup
 

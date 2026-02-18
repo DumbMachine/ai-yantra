@@ -57,9 +57,21 @@ importers:
       '@streamdown/mermaid':
         specifier: ^1.0.1
         version: 1.0.1(react@19.2.3)
-      agent-skills:
+      '@yantra/memory':
+        specifier: workspace:*
+        version: link:../memory
+      '@yantra/pg-fs':
+        specifier: workspace:*
+        version: link:../pg-fs
+      '@yantra/ptc':
+        specifier: workspace:*
+        version: link:../ptc
+      '@yantra/skills':
         specifier: workspace:*
         version: link:../skills
+      '@yantra/tool-search':
+        specifier: workspace:*
+        version: link:../tool-search
       ai:
         specifier: ^6.0.73
         version: 6.0.73(zod@3.25.76)
@@ -78,9 +90,6 @@ importers:
       lucide-react:
         specifier: ^0.563.0
         version: 0.563.0(react@19.2.3)
-      memory:
-        specifier: workspace:*
-        version: link:../memory
       motion:
         specifier: ^12.33.0
         version: 12.33.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -96,12 +105,6 @@ importers:
       pg:
         specifier: ^8.18.0
         version: 8.18.0
-      pg-fs:
-        specifier: 0.1.0
-        version: 0.1.0(@ai-sdk/openai@3.0.26(zod@3.25.76))(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.13)(@types/pg@8.16.0)(better-sqlite3@11.10.0)
-      ptc:
-        specifier: workspace:*
-        version: link:../ptc
       react:
         specifier: 19.2.3
         version: 19.2.3
@@ -126,9 +129,6 @@ importers:
       tokenlens:
         specifier: ^1.3.1
         version: 1.3.1
-      tool-search:
-        specifier: workspace:*
-        version: link:../tool-search
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
@@ -166,12 +166,12 @@ importers:
 
   packages/memory:
     dependencies:
+      '@yantra/pg-fs':
+        specifier: workspace:*
+        version: link:../pg-fs
       ai:
         specifier: ^6.0.42
         version: 6.0.73(zod@3.25.76)
-      pg-fs:
-        specifier: workspace:*
-        version: link:../pg-fs
       zod:
         specifier: ^3.23.0
         version: 3.25.76
@@ -4914,15 +4914,6 @@ packages:
 
   pg-connection-string@2.11.0:
     resolution: {integrity: sha512-kecgoJwhOpxYU21rZjULrmrBJ698U2RxXofKVzOn5UDj61BPj/qMb7diYUR1nLScCDbrztQFl1TaQZT0t1EtzQ==}
-
-  pg-fs@0.1.0:
-    resolution: {integrity: sha512-4NjKAsLekG2TA6sXn++WGoOw6TqSUr5DZrwPnWOBPu0furS9qX4cPCrvIxXtPpn1FEvFLbJe02MJGfnqqMWqrg==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      '@ai-sdk/openai': ^1.0.0
-    peerDependenciesMeta:
-      '@ai-sdk/openai':
-        optional: true
 
   pg-int8@1.0.1:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
@@ -10892,48 +10883,6 @@ snapshots:
     optional: true
 
   pg-connection-string@2.11.0: {}
-
-  pg-fs@0.1.0(@ai-sdk/openai@3.0.26(zod@3.25.76))(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.13)(@types/pg@8.16.0)(better-sqlite3@11.10.0):
-    dependencies:
-      '@ai-sdk/openai-compatible': 2.0.27(zod@3.25.76)
-      '@clack/prompts': 0.11.0
-      ai: 6.0.73(zod@3.25.76)
-      dotenv: 17.2.4
-      drizzle-orm: 0.45.1(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.13)(@types/pg@8.16.0)(better-sqlite3@11.10.0)(pg@8.18.0)
-      pg: 8.18.0
-      zod: 3.25.76
-    optionalDependencies:
-      '@ai-sdk/openai': 3.0.26(zod@3.25.76)
-    transitivePeerDependencies:
-      - '@aws-sdk/client-rds-data'
-      - '@cloudflare/workers-types'
-      - '@electric-sql/pglite'
-      - '@libsql/client'
-      - '@libsql/client-wasm'
-      - '@neondatabase/serverless'
-      - '@op-engineering/op-sqlite'
-      - '@opentelemetry/api'
-      - '@planetscale/database'
-      - '@prisma/client'
-      - '@tidbcloud/serverless'
-      - '@types/better-sqlite3'
-      - '@types/pg'
-      - '@types/sql.js'
-      - '@upstash/redis'
-      - '@vercel/postgres'
-      - '@xata.io/client'
-      - better-sqlite3
-      - bun-types
-      - expo-sqlite
-      - gel
-      - knex
-      - kysely
-      - mysql2
-      - pg-native
-      - postgres
-      - prisma
-      - sql.js
-      - sqlite3
 
   pg-int8@1.0.1: {}
 

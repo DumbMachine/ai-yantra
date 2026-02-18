@@ -1,5 +1,5 @@
 {
-  "name": "memory",
+  "name": "@yantra/memory",
   "version": "0.1.0",
   "description": "AI SDK Memory Tools backed by SQLite via pg-fs",
   "type": "module",
@@ -22,7 +22,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "pg-fs": "workspace:*",
+    "@yantra/pg-fs": "workspace:*",
     "ai": "^6.0.42",
     "zod": "^3.23.0"
   },

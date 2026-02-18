@@ -1,4 +1,4 @@
-import { tool } from "tool-search";
+import { tool } from "@yantra/tool-search";
 import { z } from "zod";
 
 // ====================================================================
