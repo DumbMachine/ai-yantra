@@ -1,6 +1,6 @@
 {
   "name": "@ai-yantra/memory",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AI SDK Memory Tools backed by SQLite via pg-fs",
   "type": "module",
   "main": "./dist/index.js",

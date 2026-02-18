@@ -8,17 +8,18 @@
 
 ### Why Yantra?
 
-AI Agents are great at using the file system to organize and interact with information. In a project, at https://www.krucible.app/, we needed a way to manage files without having to create a sandbox ( $$$ ) for user thread. So we created the abstraction over fs, that connects to postgres databases as the data store. An abstraction that:
+AI Agents are great at using the file system to organize and interact with information. In a project, at https://www.krucible.app/, we needed a way to manage files without having to create a sandbox ( $$$ ) for user thread. So we created the abstraction over fs, that connects to databases as the data store. An abstraction that:
 - is not a per-thread sandbox
 - durable state
 - inspectable and debuggable
+- works with both **PostgreSQL** and **SQLite**
 
 ## Project Structure
 
 ```
 packages/
-├── pg-fs/             # @ai-yantra/pg-fs — PostgreSQL-backed filesystem ( published on npm )
-├── memory/            # @ai-yantra/memory — AI SDK Memory Tools backed by SQLite via pg-fs
+├── pg-fs/             # @ai-yantra/pg-fs — Database-backed filesystem with PostgreSQL and SQLite support ( published on npm )
+├── memory/            # @ai-yantra/memory — Persistent memory tools for AI agents, backed by SQLite via pg-fs
 ├── skills/            # @ai-yantra/skills — Skill discovery + loading for AI SDK agents (file-based or virtual)
 ├── tool-search/       # @ai-yantra/tool-search — Give your agent 100 tools without bloating its context. Tools are lazy-loaded — the agent discovers them as needed
 └── ptc/               # @ai-yantra/ptc — Programmable Tool Calling. Instead of one tool call per round-trip, the LLM writes JS that calls multiple tools in one shot
@@ -27,43 +28,46 @@ apps/
 └── demo/              # @ai-yantra/demo — Demo application
 ```
 
+## How It Works
+
+### @ai-yantra/pg-fs
+
+A virtual filesystem stored in a database instead of disk. Files and directories are rows in a `nodes` table, while file contents live in a separate `content_blocks` table keyed by SHA-256 hash — giving you content-addressable storage with automatic deduplication. Supports both PostgreSQL (for production/shared state) and SQLite (for lightweight/embedded use) through a unified driver interface built on Drizzle ORM. Ships with pre-built AI SDK tools so agents can read, write, edit, and search files out of the box.
+
+### @ai-yantra/memory
+
+A persistent memory layer for AI agents built on top of pg-fs. It uses a SQLite-backed filesystem scoped to a `/memories` directory, giving agents a place to store notes, progress, and context that survives across conversations. Exposes tools like `memory_view`, `memory_create`, `memory_str_replace`, and `memory_insert` — designed for agents to read and update their own memory files naturally. Comes with a system prompt that teaches agents how to use it.
+
 ## Features
 
-- PostgreSQL-backed filesystem with full operations (read, write, mkdir, unlink, rename, copy, glob, grep)
+- Database-backed filesystem with full operations (read, write, mkdir, unlink, rename, copy, glob, grep)
+- **PostgreSQL** and **SQLite** backends via a unified API
 - Content-addressable storage with deduplication
 - Hierarchical paths with efficient tree operations
 - AI SDK tools out of the box
 - Type-safe implementation with Drizzle ORM
-- Comprehensive filesystem API and garbage collection
-
+- Persistent agent memory with scoped file management
 
 ## Quick Start
 
-Install it from npm
+### @ai-yantra/pg-fs
+
 ```bash
-pnpm install @ai-yantra/pg-fs
+pnpm install @ai-yantra/pg-fs drizzle-orm better-sqlite3
 ```
 
-
-### Try @ai-yantra/pg-fs
 ```typescript
-import { Pool } from 'pg';
-import { PgFs } from '@ai-yantra/pg-fs';
-import { ToolLoopAgent } from 'ai';
+import { createSqliteFs } from '@ai-yantra/pg-fs';
 import { openai } from '@ai-sdk/openai';
 
-const pool = new Pool({
-  connectionString: 'postgresql://localhost:5432/mydb',
-});
-
-// Initialize pg-fs (creates tables automatically)
-const pgfs = await PgFs.create({ pool });
+// SQLite — zero config, great for getting started
+const dbfs = await createSqliteFs('./agent.sqlite');
 
 // Use with AI agents
 const agent = new ToolLoopAgent({
   model: openai('gpt-4'),
   instructions: 'You are a helpful file management assistant.',
-  tools: pgfs.tools, // Pre-built filesystem tools
+  tools: dbfs.tools,
 });
 
 const result = await agent.generate({
@@ -71,6 +75,36 @@ const result = await agent.generate({
 });
 
 console.log(result.text);
+```
+
+For PostgreSQL, swap the setup:
+
+```typescript
+import { Pool } from 'pg';
+import { DbFs } from '@ai-yantra/pg-fs';
+
+const pool = new Pool({ connectionString: 'postgresql://localhost:5432/mydb' });
+const dbfs = await DbFs.create({ dialect: 'postgresql', pool });
+```
+
+### @ai-yantra/memory
+
+```bash
+pnpm install @ai-yantra/memory
+```
+
+```typescript
+import { createMemory } from '@ai-yantra/memory';
+
+const { tools, systemPrompt } = await createMemory({
+  filename: './agent-memory.sqlite', // omit for in-memory
+});
+
+const agent = new ToolLoopAgent({
+  model: openai('gpt-4'),
+  instructions: systemPrompt,
+  tools,
+});
 ```
 
 
