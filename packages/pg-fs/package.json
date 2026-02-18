@@ -1,5 +1,5 @@
 {
-  "name": "@yantra/pg-fs",
+  "name": "@ai-yantra/pg-fs",
   "version": "0.1.0",
   "description": "PostgreSQL-backed filesystem with AI SDK tools for building intelligent file management agents",
   "type": "module",

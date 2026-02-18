@@ -1,5 +1,5 @@
 {
-  "name": "@yantra/tool-search",
+  "name": "@ai-yantra/tool-search",
   "version": "1.0.0",
   "description": "Tool Search library for Vercel AI SDK",
   "main": "dist/index.js",

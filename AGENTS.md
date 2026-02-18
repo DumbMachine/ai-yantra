@@ -4,7 +4,7 @@ This file provides context for AI coding assistants working with the Yantra repo
 
 ## Project Overview
 
-**Yantra** is a minimalist collection of `@yantra/` scoped extensions for the AI SDK. We don't just build tools—we craft the invisible threads that connect intelligence to action.
+**Yantra** is a minimalist collection of `@ai-yantra/` scoped extensions for the AI SDK. We don't just build tools—we craft the invisible threads that connect intelligence to action.
 
 - **Repository**: https://github.com/dumbmachine/ai-sdk-clothes
 - **Inspiration**: Anthropic's advanced tool use engineering (https://www.anthropic.com/engineering/advanced-tool-use)
@@ -18,12 +18,12 @@ This is a **monorepo** using pnpm workspaces.
 
 | Directory               | Package Name           | Description                                      |
 | ----------------------- | ---------------------- | ------------------------------------------------ |
-| `packages/pg-fs`        | `@yantra/pg-fs`        | PostgreSQL-backed filesystem with AI SDK tools   |
-| `packages/memory`       | `@yantra/memory`       | AI SDK Memory Tools backed by SQLite via pg-fs   |
-| `packages/skills`       | `@yantra/skills`       | Skill discovery + loading for AI SDK agents      |
-| `packages/tool-search`  | `@yantra/tool-search`  | Tool Search utility package                      |
-| `packages/ptc`          | `@yantra/ptc`          | Programmable Tool Calling (live)                 |
-| `packages/demo`         | `@yantra/demo`         | Demo application (private)                       |
+| `packages/pg-fs`        | `@ai-yantra/pg-fs`        | PostgreSQL-backed filesystem with AI SDK tools   |
+| `packages/memory`       | `@ai-yantra/memory`       | AI SDK Memory Tools backed by SQLite via pg-fs   |
+| `packages/skills`       | `@ai-yantra/skills`       | Skill discovery + loading for AI SDK agents      |
+| `packages/tool-search`  | `@ai-yantra/tool-search`  | Tool Search utility package                      |
+| `packages/ptc`          | `@ai-yantra/ptc`          | Programmable Tool Calling (live)                 |
+| `packages/demo`         | `@ai-yantra/demo`         | Demo application (private)                       |
 
 ## Development Setup
 

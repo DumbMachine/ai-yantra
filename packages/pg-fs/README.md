@@ -1,18 +1,18 @@
-# @yantra/pg-fs
+# @ai-yantra/pg-fs
 
 PostgreSQL-backed filesystem with AI SDK tools for building file management agents.
 
 ## Install
 
 ```bash
-npm install @yantra/pg-fs pg drizzle-orm
+npm install @ai-yantra/pg-fs pg drizzle-orm
 ```
 
 ## Quick Start
 
 ```typescript
 import { Pool } from 'pg';
-import { PgFs } from '@yantra/pg-fs';
+import { PgFs } from '@ai-yantra/pg-fs';
 
 const pool = new Pool({
   connectionString: 'postgresql://localhost:5432/mydb',
@@ -82,7 +82,7 @@ The underlying Drizzle instance is exposed for custom queries:
 
 ```typescript
 import { sql } from 'drizzle-orm';
-import { nodes } from '@yantra/pg-fs';
+import { nodes } from '@ai-yantra/pg-fs';
 
 const recentFiles = await pgfs.db.query.nodes.findMany({
   where: sql`modified_at > NOW() - INTERVAL '1 hour'`,

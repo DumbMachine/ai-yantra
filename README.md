@@ -1,6 +1,6 @@
 # Yantra
 
-**Yantra** is a collection of `@yantra/` scoped packages for building intelligent AI agents with the Vercel AI SDK.
+**Yantra** is a collection of `@ai-yantra/` scoped packages for building intelligent AI agents with the Vercel AI SDK.
 
 ![Yantra Demo](https://github.com/DumbMachine/pg-fs/blob/main/static/demo.gif?raw=true)
 
@@ -17,14 +17,14 @@ AI Agents are great at using the file system to organize and interact with infor
 
 ```
 packages/
-├── pg-fs/             # @yantra/pg-fs — PostgreSQL-backed filesystem ( published on npm )
-├── memory/            # @yantra/memory — AI SDK Memory Tools backed by SQLite via pg-fs
-├── skills/            # @yantra/skills — Skill discovery + loading for AI SDK agents (file-based or virtual)
-├── tool-search/       # @yantra/tool-search — Give your agent 100 tools without bloating its context. Tools are lazy-loaded — the agent discovers them as needed
-└── ptc/               # @yantra/ptc — Programmable Tool Calling. Instead of one tool call per round-trip, the LLM writes JS that calls multiple tools in one shot
+├── pg-fs/             # @ai-yantra/pg-fs — PostgreSQL-backed filesystem ( published on npm )
+├── memory/            # @ai-yantra/memory — AI SDK Memory Tools backed by SQLite via pg-fs
+├── skills/            # @ai-yantra/skills — Skill discovery + loading for AI SDK agents (file-based or virtual)
+├── tool-search/       # @ai-yantra/tool-search — Give your agent 100 tools without bloating its context. Tools are lazy-loaded — the agent discovers them as needed
+└── ptc/               # @ai-yantra/ptc — Programmable Tool Calling. Instead of one tool call per round-trip, the LLM writes JS that calls multiple tools in one shot
 
 apps/
-└── demo/              # @yantra/demo — Demo application
+└── demo/              # @ai-yantra/demo — Demo application
 ```
 
 ## Features
@@ -41,14 +41,14 @@ apps/
 
 Install it from npm
 ```bash
-pnpm install @yantra/pg-fs
+pnpm install @ai-yantra/pg-fs
 ```
 
 
-### Try @yantra/pg-fs
+### Try @ai-yantra/pg-fs
 ```typescript
 import { Pool } from 'pg';
-import { PgFs } from '@yantra/pg-fs';
+import { PgFs } from '@ai-yantra/pg-fs';
 import { ToolLoopAgent } from 'ai';
 import { openai } from '@ai-sdk/openai';
 

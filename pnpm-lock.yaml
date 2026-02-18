@@ -39,6 +39,21 @@ importers:
       '@ai-sdk/react':
         specifier: ^3.0.75
         version: 3.0.75(react@19.2.3)(zod@3.25.76)
+      '@ai-yantra/memory':
+        specifier: workspace:*
+        version: link:../memory
+      '@ai-yantra/pg-fs':
+        specifier: workspace:*
+        version: link:../pg-fs
+      '@ai-yantra/ptc':
+        specifier: workspace:*
+        version: link:../ptc
+      '@ai-yantra/skills':
+        specifier: workspace:*
+        version: link:../skills
+      '@ai-yantra/tool-search':
+        specifier: workspace:*
+        version: link:../tool-search
       '@base-ui/react':
         specifier: ^1.1.0
         version: 1.1.0(@types/react@19.2.13)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -57,21 +72,6 @@ importers:
       '@streamdown/mermaid':
         specifier: ^1.0.1
         version: 1.0.1(react@19.2.3)
-      '@yantra/memory':
-        specifier: workspace:*
-        version: link:../memory
-      '@yantra/pg-fs':
-        specifier: workspace:*
-        version: link:../pg-fs
-      '@yantra/ptc':
-        specifier: workspace:*
-        version: link:../ptc
-      '@yantra/skills':
-        specifier: workspace:*
-        version: link:../skills
-      '@yantra/tool-search':
-        specifier: workspace:*
-        version: link:../tool-search
       ai:
         specifier: ^6.0.73
         version: 6.0.73(zod@3.25.76)
@@ -166,7 +166,7 @@ importers:
 
   packages/memory:
     dependencies:
-      '@yantra/pg-fs':
+      '@ai-yantra/pg-fs':
         specifier: workspace:*
         version: link:../pg-fs
       ai:

@@ -1,4 +1,4 @@
-import type { SkillDefinition } from "@yantra/skills";
+import type { SkillDefinition } from "@ai-yantra/skills";
 
 export const exampleSkills: SkillDefinition[] = [
 	{

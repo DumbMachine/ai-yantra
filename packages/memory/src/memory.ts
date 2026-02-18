@@ -1,5 +1,5 @@
-import type { DbFileSystem } from "@yantra/pg-fs";
-import { createSqliteFs, type DbFs } from "@yantra/pg-fs";
+import type { DbFileSystem } from "@ai-yantra/pg-fs";
+import { createSqliteFs, type DbFs } from "@ai-yantra/pg-fs";
 import { validateMemoryPath } from "./path-validation.js";
 import {
 	formatFileContent,
@@ -21,7 +21,7 @@ export class Memory {
 		let dbFs: DbFs;
 
 		if (config?.sqliteDatabase) {
-			const { DbFs: DbFsClass } = await import("@yantra/pg-fs");
+			const { DbFs: DbFsClass } = await import("@ai-yantra/pg-fs");
 			dbFs = await DbFsClass.create({
 				dialect: "sqlite",
 				sqliteDatabase: config.sqliteDatabase,
