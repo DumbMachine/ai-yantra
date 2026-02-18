@@ -26,6 +26,7 @@
     "cmdk": "^1.1.1",
     "dotenv": "^17.2.4",
     "lucide-react": "^0.563.0",
+    "memory": "workspace:*",
     "motion": "^12.33.0",
     "nanoid": "^5.1.6",
     "next": "16.1.6",

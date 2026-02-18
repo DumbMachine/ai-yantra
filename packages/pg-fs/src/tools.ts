@@ -1,11 +1,8 @@
 import { tool } from "ai";
 import { z } from "zod";
-import type { PgFileSystem } from "./db-fs.js";
+import type { DbFileSystem } from "./db-fs.js";
 
-/**
- * Create AI SDK tools for pg-fs filesystem operations
- */
-export function createFileSystemTools(fs: PgFileSystem) {
+export function createFileSystemTools(fs: DbFileSystem) {
 	return {
 		/**
 		 * Read file contents with pagination support for large files

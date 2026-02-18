@@ -8,7 +8,7 @@ import {
 	NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import { BookOpen, Code2, Database, Search, Terminal } from "lucide-react";
+import { BookOpen, Brain, Code2, Database, Search, Terminal } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -38,6 +38,12 @@ export const demos = [
 		title: "Agent Skills",
 		description: "Progressive skill loading from ~/.skills",
 		icon: BookOpen,
+	},
+	{
+		id: "memory",
+		title: "Memory",
+		description: "Persistent agent memory across conversations",
+		icon: Brain,
 	},
 	{
 		id: "chat",

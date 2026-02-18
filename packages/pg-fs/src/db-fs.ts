@@ -1,6 +1,5 @@
-import { eq, and, like, sql } from "drizzle-orm";
-import * as schema from "./schema.js";
-import { Database, FileSystemUtils } from "./utils.js";
+import type { DatabaseDriver } from "./drivers/types.js";
+import { FileSystemUtils } from "./utils.js";
 
 export interface FileStats {
 	path: string;
@@ -25,8 +24,8 @@ export interface WriteOptions {
 
 export interface ReadOptions {
 	encoding?: "utf8" | "base64";
-	offset?: number; // Line number to start from (1-indexed)
-	limit?: number; // Number of lines to read
+	offset?: number;
+	limit?: number;
 }
 
 export interface ListOptions {
@@ -34,51 +33,22 @@ export interface ListOptions {
 	pattern?: string;
 	sortBy?: "name" | "modified" | "size" | "created";
 	order?: "asc" | "desc";
-	limit?: number; // Maximum number of items to return
-	offset?: number; // Number of items to skip
+	limit?: number;
+	offset?: number;
 }
 
-// Constants for output size management
-const MAX_FILE_SIZE_BYTES = 100_000; // ~100KB for single read
-const MAX_LINES_PER_READ = 1000; // Max lines to return at once
-const MAX_LIST_ITEMS = 500; // Max directory items to return
-const MAX_SEARCH_RESULTS = 100; // Max search results to return
+const MAX_FILE_SIZE_BYTES = 100_000;
+const MAX_LINES_PER_READ = 1000;
+const MAX_LIST_ITEMS = 500;
+const MAX_SEARCH_RESULTS = 100;
 
-/**
- * Core filesystem operations using PostgreSQL as storage
- */
-export class PgFileSystem {
-	private utils: FileSystemUtils;
+export class DbFileSystem {
+	constructor(private driver: DatabaseDriver) {}
 
-	constructor(private db: Database) {
-		this.utils = new FileSystemUtils(db);
-	}
-
-	/**
-	 * Initialize the filesystem with root directory
-	 */
 	async initialize(): Promise<void> {
-		// Create root directory if it doesn't exist
-		const root = await this.utils.findNodeByPath("/");
-		if (!root) {
-			const rootId = FileSystemUtils.generateId();
-			await this.db.insert(schema.nodes).values({
-				id: rootId,
-				path: "/",
-				name: "",
-				treePath: "root",
-				parentId: null,
-				isDirectory: true,
-				size: 0,
-				mode: "0755",
-				owner: "system",
-			});
-		}
+		await this.driver.initialize();
 	}
 
-	/**
-	 * Write file content
-	 */
 	async writeFile(
 		path: string,
 		content: string,
@@ -90,61 +60,54 @@ export class PgFileSystem {
 			throw new Error(`Invalid path: ${path}`);
 		}
 
-		// Ensure parent directory exists
 		const parentPath = FileSystemUtils.getParentPath(normalized);
 		if (parentPath && options.createParents) {
 			await this.mkdir(parentPath, { recursive: true });
 		}
 
 		if (parentPath) {
-			const parent = await this.utils.findNodeByPath(parentPath);
+			const parent = await this.driver.findNodeByPath(parentPath);
 			if (!parent) {
 				throw new Error(`Parent directory not found: ${parentPath}`);
 			}
 		}
 
-		// Check if file already exists
-		const existing = await this.utils.findNodeByPath(normalized);
+		const existing = await this.driver.findNodeByPath(normalized);
 
-		// Create or get content block
-		const contentHash = await this.utils.getOrCreateContent(content);
+		const contentHash = await this.driver.getOrCreateContent(content);
 		const size = Buffer.byteLength(content, "utf8");
 		const fileName = FileSystemUtils.getFileName(normalized);
 		const treePath = FileSystemUtils.pathToTreePath(normalized);
 
 		const parent = parentPath
-			? await this.utils.findNodeByPath(parentPath)
+			? await this.driver.findNodeByPath(parentPath)
 			: null;
 
 		if (existing) {
-			// Update existing file
 			if (existing.isDirectory) {
 				throw new Error(`Cannot write to directory: ${path}`);
 			}
 
-			// Decrement old content ref count
 			if (existing.contentHash) {
-				await this.utils.decrementRefCount(existing.contentHash);
+				await this.driver.decrementRefCount(existing.contentHash);
 			}
 
-			await this.db
-				.update(schema.nodes)
-				.set({
-					contentHash,
-					size,
-					modifiedAt: new Date(),
-					mimeType: options.mimeType || existing.mimeType,
-					metadata: options.metadata || existing.metadata,
-				})
-				.where(eq(schema.nodes.id, existing.id));
+			await this.driver.updateNode(existing.id, {
+				contentHash,
+				size,
+				modifiedAt: new Date(),
+				mimeType: options.mimeType || existing.mimeType,
+				metadata: (options.metadata || existing.metadata) as Record<
+					string,
+					unknown
+				> | null,
+			});
 
-			// Update search index
-			await this.utils.updateSearchIndex(existing.id, normalized, content);
+			await this.driver.updateSearchIndex(existing.id, normalized, content);
 		} else {
-			// Create new file
 			const nodeId = FileSystemUtils.generateId();
 
-			await this.db.insert(schema.nodes).values({
+			await this.driver.insertNode({
 				id: nodeId,
 				path: normalized,
 				name: fileName,
@@ -159,14 +122,10 @@ export class PgFileSystem {
 				metadata: options.metadata || {},
 			});
 
-			// Create search index
-			await this.utils.updateSearchIndex(nodeId, normalized, content);
+			await this.driver.updateSearchIndex(nodeId, normalized, content);
 		}
 	}
 
-	/**
-	 * Read file content with pagination support
-	 */
 	async readFile(path: string, options: ReadOptions = {}): Promise<{
 		content: string;
 		totalLines?: number;
@@ -176,7 +135,7 @@ export class PgFileSystem {
 		limit?: number;
 	}> {
 		const normalized = FileSystemUtils.normalizePath(path);
-		const node = await this.utils.findNodeByPath(normalized);
+		const node = await this.driver.findNodeByPath(normalized);
 
 		if (!node) {
 			throw new Error(`File not found: ${path}`);
@@ -194,15 +153,10 @@ export class PgFileSystem {
 			};
 		}
 
-		// Update access time
-		await this.db
-			.update(schema.nodes)
-			.set({ accessedAt: new Date() })
-			.where(eq(schema.nodes.id, node.id));
+		await this.driver.updateNode(node.id, { accessedAt: new Date() });
 
-		const fullContent = await this.utils.getContent(node.contentHash);
+		const fullContent = await this.driver.getContent(node.contentHash);
 
-		// Handle base64 encoding without pagination
 		if (options.encoding === "base64") {
 			const encoded = Buffer.from(fullContent).toString("base64");
 			return {
@@ -211,12 +165,10 @@ export class PgFileSystem {
 			};
 		}
 
-		// Check if file is too large and pagination is needed
 		const totalSize = Buffer.byteLength(fullContent, "utf8");
 		const lines = fullContent.split("\n");
 		const totalLines = lines.length;
 
-		// If no pagination requested and file is small enough, return all
 		if (!options.offset && !options.limit && totalSize <= MAX_FILE_SIZE_BYTES) {
 			return {
 				content: fullContent,
@@ -225,8 +177,7 @@ export class PgFileSystem {
 			};
 		}
 
-		// Apply pagination
-		const offset = Math.max(0, (options.offset || 1) - 1); // Convert to 0-indexed
+		const offset = Math.max(0, (options.offset || 1) - 1);
 		const limit = Math.min(
 			options.limit || MAX_LINES_PER_READ,
 			MAX_LINES_PER_READ,
@@ -241,14 +192,11 @@ export class PgFileSystem {
 			totalLines,
 			totalSize,
 			hasMore,
-			offset: offset + 1, // Return as 1-indexed
+			offset: offset + 1,
 			limit,
 		};
 	}
 
-	/**
-	 * Create directory
-	 */
 	async mkdir(
 		path: string,
 		options: { recursive?: boolean; mode?: string; owner?: string } = {},
@@ -259,11 +207,10 @@ export class PgFileSystem {
 			throw new Error(`Invalid path: ${path}`);
 		}
 
-		// Check if already exists
-		const existing = await this.utils.findNodeByPath(normalized);
+		const existing = await this.driver.findNodeByPath(normalized);
 		if (existing) {
 			if (existing.isDirectory) {
-				return; // Already exists
+				return;
 			}
 			throw new Error(`File exists at path: ${path}`);
 		}
@@ -271,7 +218,7 @@ export class PgFileSystem {
 		const parentPath = FileSystemUtils.getParentPath(normalized);
 
 		if (parentPath && parentPath !== "/") {
-			const parent = await this.utils.findNodeByPath(parentPath);
+			const parent = await this.driver.findNodeByPath(parentPath);
 			if (!parent) {
 				if (options.recursive) {
 					await this.mkdir(parentPath, options);
@@ -282,13 +229,13 @@ export class PgFileSystem {
 		}
 
 		const parent = parentPath
-			? await this.utils.findNodeByPath(parentPath)
+			? await this.driver.findNodeByPath(parentPath)
 			: null;
 		const fileName = FileSystemUtils.getFileName(normalized);
 		const treePath = FileSystemUtils.pathToTreePath(normalized);
 		const nodeId = FileSystemUtils.generateId();
 
-		await this.db.insert(schema.nodes).values({
+		await this.driver.insertNode({
 			id: nodeId,
 			path: normalized,
 			name: fileName,
@@ -301,9 +248,6 @@ export class PgFileSystem {
 		});
 	}
 
-	/**
-	 * List directory contents with pagination
-	 */
 	async readdir(path: string, options: ListOptions = {}): Promise<{
 		items: string[];
 		total: number;
@@ -311,10 +255,19 @@ export class PgFileSystem {
 		offset: number;
 		limit: number;
 	}> {
-		const allNodes = await this.utils.listDirectory(path);
+		const normalized = FileSystemUtils.normalizePath(path);
+		const node = await this.driver.findNodeByPath(normalized);
+
+		if (!node) {
+			throw new Error(`Directory not found: ${path}`);
+		}
+		if (!node.isDirectory) {
+			throw new Error(`Not a directory: ${path}`);
+		}
+
+		const allNodes = await this.driver.findChildNodes(node.id);
 		const total = allNodes.length;
 
-		// Apply pagination
 		const offset = options.offset || 0;
 		const limit = Math.min(
 			options.limit || MAX_LIST_ITEMS,
@@ -325,7 +278,7 @@ export class PgFileSystem {
 		const hasMore = offset + limit < total;
 
 		return {
-			items: paginatedNodes.map((node) => node.name),
+			items: paginatedNodes.map((n) => n.name),
 			total,
 			hasMore,
 			offset,
@@ -333,9 +286,6 @@ export class PgFileSystem {
 		};
 	}
 
-	/**
-	 * List directory with detailed stats and pagination
-	 */
 	async readdirStats(
 		path: string,
 		options: ListOptions = {},
@@ -346,10 +296,19 @@ export class PgFileSystem {
 		offset: number;
 		limit: number;
 	}> {
-		const allNodes = await this.utils.listDirectory(path);
+		const normalized = FileSystemUtils.normalizePath(path);
+		const node = await this.driver.findNodeByPath(normalized);
+
+		if (!node) {
+			throw new Error(`Directory not found: ${path}`);
+		}
+		if (!node.isDirectory) {
+			throw new Error(`Not a directory: ${path}`);
+		}
+
+		const allNodes = await this.driver.findChildNodes(node.id);
 		const total = allNodes.length;
 
-		// Apply pagination
 		const offset = options.offset || 0;
 		const limit = Math.min(
 			options.limit || MAX_LIST_ITEMS,
@@ -360,17 +319,17 @@ export class PgFileSystem {
 		const hasMore = offset + limit < total;
 
 		return {
-			items: paginatedNodes.map((node) => ({
-				path: node.path,
-				name: node.name,
-				isDirectory: node.isDirectory,
-				size: node.size,
-				mimeType: node.mimeType || undefined,
-				createdAt: node.createdAt,
-				modifiedAt: node.modifiedAt,
-				accessedAt: node.accessedAt,
-				mode: node.mode,
-				owner: node.owner,
+			items: paginatedNodes.map((n) => ({
+				path: n.path,
+				name: n.name,
+				isDirectory: n.isDirectory,
+				size: n.size,
+				mimeType: n.mimeType || undefined,
+				createdAt: n.createdAt,
+				modifiedAt: n.modifiedAt,
+				accessedAt: n.accessedAt,
+				mode: n.mode,
+				owner: n.owner,
 			})),
 			total,
 			hasMore,
@@ -379,12 +338,9 @@ export class PgFileSystem {
 		};
 	}
 
-	/**
-	 * Get file/directory stats
-	 */
 	async stat(path: string): Promise<FileStats> {
 		const normalized = FileSystemUtils.normalizePath(path);
-		const node = await this.utils.findNodeByPath(normalized);
+		const node = await this.driver.findNodeByPath(normalized);
 
 		if (!node) {
 			throw new Error(`Path not found: ${path}`);
@@ -404,24 +360,18 @@ export class PgFileSystem {
 		};
 	}
 
-	/**
-	 * Check if path exists
-	 */
 	async exists(path: string): Promise<boolean> {
 		const normalized = FileSystemUtils.normalizePath(path);
-		const node = await this.utils.findNodeByPath(normalized);
+		const node = await this.driver.findNodeByPath(normalized);
 		return node !== undefined;
 	}
 
-	/**
-	 * Delete file or directory
-	 */
 	async unlink(
 		path: string,
 		options: { recursive?: boolean } = {},
 	): Promise<void> {
 		const normalized = FileSystemUtils.normalizePath(path);
-		const node = await this.utils.findNodeByPath(normalized);
+		const node = await this.driver.findNodeByPath(normalized);
 
 		if (!node) {
 			throw new Error(`Path not found: ${path}`);
@@ -434,35 +384,30 @@ export class PgFileSystem {
 			}
 		}
 
-		// Decrement content reference count
 		if (node.contentHash) {
-			await this.utils.decrementRefCount(node.contentHash);
+			await this.driver.decrementRefCount(node.contentHash);
 		}
 
-		// Delete node (cascade will handle children if recursive)
-		await this.db.delete(schema.nodes).where(eq(schema.nodes.id, node.id));
+		await this.driver.deleteNode(node.id);
 	}
 
-	/**
-	 * Move/rename file or directory
-	 */
 	async rename(oldPath: string, newPath: string): Promise<void> {
 		const normalizedOld = FileSystemUtils.normalizePath(oldPath);
 		const normalizedNew = FileSystemUtils.normalizePath(newPath);
 
-		const node = await this.utils.findNodeByPath(normalizedOld);
+		const node = await this.driver.findNodeByPath(normalizedOld);
 		if (!node) {
 			throw new Error(`Source path not found: ${oldPath}`);
 		}
 
-		const existingNew = await this.utils.findNodeByPath(normalizedNew);
+		const existingNew = await this.driver.findNodeByPath(normalizedNew);
 		if (existingNew) {
 			throw new Error(`Destination path already exists: ${newPath}`);
 		}
 
 		const newParentPath = FileSystemUtils.getParentPath(normalizedNew);
 		const newParent = newParentPath
-			? await this.utils.findNodeByPath(newParentPath)
+			? await this.driver.findNodeByPath(newParentPath)
 			: null;
 
 		if (newParentPath && !newParent) {
@@ -474,41 +419,30 @@ export class PgFileSystem {
 		const newFileName = FileSystemUtils.getFileName(normalizedNew);
 		const newTreePath = FileSystemUtils.pathToTreePath(normalizedNew);
 
-		await this.db
-			.update(schema.nodes)
-			.set({
-				path: normalizedNew,
-				name: newFileName,
-				treePath: newTreePath,
-				parentId: newParent?.id || null,
-				modifiedAt: new Date(),
-			})
-			.where(eq(schema.nodes.id, node.id));
+		await this.driver.updateNode(node.id, {
+			path: normalizedNew,
+			name: newFileName,
+			treePath: newTreePath,
+			parentId: newParent?.id || null,
+			modifiedAt: new Date(),
+		});
 
-		// Update all descendant paths if directory
 		if (node.isDirectory) {
-			const descendants = await this.db.query.nodes.findMany({
-				where: like(schema.nodes.path, `${normalizedOld}/%`),
-			});
+			const descendants =
+				await this.driver.findDescendantsByPathPrefix(normalizedOld);
 
 			for (const desc of descendants) {
 				const newDescPath = desc.path.replace(normalizedOld, normalizedNew);
 				const newDescTreePath = FileSystemUtils.pathToTreePath(newDescPath);
 
-				await this.db
-					.update(schema.nodes)
-					.set({
-						path: newDescPath,
-						treePath: newDescTreePath,
-					})
-					.where(eq(schema.nodes.id, desc.id));
+				await this.driver.updateNode(desc.id, {
+					path: newDescPath,
+					treePath: newDescTreePath,
+				});
 			}
 		}
 	}
 
-	/**
-	 * Copy file or directory
-	 */
 	async copy(
 		sourcePath: string,
 		destPath: string,
@@ -517,7 +451,7 @@ export class PgFileSystem {
 		const normalizedSource = FileSystemUtils.normalizePath(sourcePath);
 		const normalizedDest = FileSystemUtils.normalizePath(destPath);
 
-		const sourceNode = await this.utils.findNodeByPath(normalizedSource);
+		const sourceNode = await this.driver.findNodeByPath(normalizedSource);
 		if (!sourceNode) {
 			throw new Error(`Source path not found: ${sourcePath}`);
 		}
@@ -529,7 +463,6 @@ export class PgFileSystem {
 		}
 
 		if (sourceNode.isDirectory) {
-			// Copy directory recursively
 			await this.mkdir(normalizedDest);
 			const result = await this.readdir(normalizedSource);
 
@@ -539,7 +472,6 @@ export class PgFileSystem {
 				await this.copy(childSourcePath, childDestPath, options);
 			}
 		} else {
-			// Copy file - read with no limit to get full content
 			const fileData = await this.readFile(normalizedSource);
 			await this.writeFile(normalizedDest, fileData.content, {
 				mode: sourceNode.mode,
@@ -550,29 +482,22 @@ export class PgFileSystem {
 		}
 	}
 
-	/**
-	 * Search files by pattern (glob-like) with limit
-	 */
 	async glob(
 		pattern: string,
 		basePath: string = "/",
 		limit: number = MAX_SEARCH_RESULTS,
 	): Promise<{ matches: string[]; total: number; hasMore: boolean }> {
 		const normalizedBase = FileSystemUtils.normalizePath(basePath);
-
-		// Convert glob pattern to SQL LIKE pattern
 		const likePattern = pattern.replace(/\*/g, "%").replace(/\?/g, "_");
 
-		const nodes = await this.db.query.nodes.findMany({
-			where: and(
-				like(schema.nodes.path, `${normalizedBase}%`),
-				like(schema.nodes.name, likePattern),
-			),
-			limit: limit + 1, // Fetch one extra to check if there are more
-		});
+		const nodes = await this.driver.findNodesByGlob(
+			normalizedBase,
+			likePattern,
+			limit + 1,
+		);
 
 		const hasMore = nodes.length > limit;
-		const matches = nodes.slice(0, limit).map((node: typeof schema.nodes.$inferSelect) => node.path);
+		const matches = nodes.slice(0, limit).map((node) => node.path);
 
 		return {
 			matches,
@@ -581,9 +506,6 @@ export class PgFileSystem {
 		};
 	}
 
-	/**
-	 * Search file contents using full-text search with limit
-	 */
 	async search(
 		query: string,
 		basePath: string = "/",
@@ -595,38 +517,17 @@ export class PgFileSystem {
 	}> {
 		const normalizedBase = FileSystemUtils.normalizePath(basePath);
 
-		// Simple text search (in production, use PostgreSQL's ts_rank)
-		const results = await this.db
-			.select({
-				nodeId: schema.searchIndex.nodeId,
-				textContent: schema.searchIndex.textContent,
-			})
-			.from(schema.searchIndex)
-			.innerJoin(schema.nodes, eq(schema.searchIndex.nodeId, schema.nodes.id))
-			.where(
-				and(
-					like(schema.nodes.path, `${normalizedBase}%`),
-					like(schema.searchIndex.textContent, `%${query}%`),
-				),
-			)
-			.limit(limit + 1); // Fetch one extra to check if there are more
-
-		const nodes = await Promise.all(
-			results.slice(0, limit).map(async (r) => {
-				const node = await this.db.query.nodes.findFirst({
-					where: eq(schema.nodes.id, r.nodeId),
-				});
-				return node;
-			}),
+		const results = await this.driver.searchContent(
+			query,
+			normalizedBase,
+			limit + 1,
 		);
 
 		const hasMore = results.length > limit;
-		const filteredResults = nodes
-			.filter((n: typeof schema.nodes.$inferSelect | undefined): n is typeof schema.nodes.$inferSelect => n !== undefined)
-			.map((node: typeof schema.nodes.$inferSelect) => ({
-				path: node.path,
-				score: 1.0, // In production, use ts_rank
-			}));
+		const filteredResults = results.slice(0, limit).map((r) => ({
+			path: r.path,
+			score: 1.0,
+		}));
 
 		return {
 			results: filteredResults,
@@ -635,3 +536,5 @@ export class PgFileSystem {
 		};
 	}
 }
+
+export { DbFileSystem as PgFileSystem };

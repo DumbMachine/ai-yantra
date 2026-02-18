@@ -34,23 +34,33 @@
     "ai": "^6.0.42",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
-    "pg": "^8.18.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
     "@types/node": "^20.0.0",
     "@types/pg": "^8.16.0",
+    "better-sqlite3": "^11.0.0",
     "drizzle-kit": "^0.31.8",
+    "pg": "^8.18.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^1.6.0"
   },
   "peerDependencies": {
-    "@ai-sdk/openai": "^1.0.0"
+    "@ai-sdk/openai": "^1.0.0",
+    "pg": ">=8.0.0",
+    "better-sqlite3": ">=9.0.0"
   },
   "peerDependenciesMeta": {
     "@ai-sdk/openai": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "better-sqlite3": {
       "optional": true
     }
   },

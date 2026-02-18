@@ -50,7 +50,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { BookOpen, CheckIcon, Code2, Database, GlobeIcon, Search } from "lucide-react";
+import { BookOpen, Brain, CheckIcon, Code2, Database, GlobeIcon, Search } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -72,14 +72,17 @@ import {
 } from "@/components/ai-elements/context";
 import { PgFsFilePanel } from "@/components/ai-elements/pgfs-file-panel";
 import { ToolSearchPanel } from "@/components/ai-elements/tool-search-panel";
+import { MemoryPanel } from "@/components/ai-elements/memory-panel";
 import { PTCPanel } from "@/components/ai-elements/ptc-panel";
 import { DemosMenu } from "@/components/navigation-header";
 import { cn } from "@/lib/utils";
 import { TOTAL_TOOLS } from "@/lib/example-tools";
+import { ScenarioCard, ScenarioCards } from "@/components/ai-elements/scenario-card";
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
+import { memoryScenarios } from "@/lib/memory-scenarios";
 
 // Demo configurations
-type DemoType = "chat" | "pg-fs" | "programmable-calls" | "tool-search" | "skills";
+type DemoType = "chat" | "pg-fs" | "programmable-calls" | "tool-search" | "skills" | "memory";
 
 interface DemoConfig {
 	id: DemoType;
@@ -119,6 +122,13 @@ const demos: DemoConfig[] = [
 		apiEndpoint: "/api/chat",
 	},
 	{
+		id: "memory",
+		name: "Memory",
+		description: "Persistent agent memory across conversations",
+		icon: Brain,
+		apiEndpoint: "/api/chat",
+	},
+	{
 		id: "skills",
 		name: "Agent Skills",
 		description: "Progressive skill loading from ~/.skills",
@@ -136,6 +146,7 @@ const suggestionsMap: Map<DemoType, string[]> = new Map([
 			"Put that into a new folder for haikus",
 		],
 	],
+	["memory", []],
 	["programmable-calls", []],
 	["tool-search", []],
 	[
@@ -362,6 +373,21 @@ const Example = () => {
 		},
 	});
 
+	const handleScenarioClick = useCallback(
+		(message: string) => {
+			sendMessage(
+				{ text: message },
+				{
+					body: {
+						model: model,
+						activeDemo,
+					},
+				},
+			);
+		},
+		[sendMessage, model, activeDemo],
+	);
+
 	const selectedModelData = useMemo(
 		() => models.find((m) => m.id === model),
 		[model],
@@ -442,6 +468,9 @@ const Example = () => {
 					totalTools={TOTAL_TOOLS}
 					isActive={activeDemo === "tool-search"}
 				/>
+			)}
+			{activeDemo === "memory" && (
+				<MemoryPanel isActive={activeDemo === "memory"} />
 			)}
 			{activeDemo === "programmable-calls" && (
 				<PTCPanel
@@ -599,15 +628,27 @@ const Example = () => {
 				)}
 
 				<div className="grid shrink-0 gap-4 pt-4">
-					<Suggestions className="px-4">
-						{suggestions.map((suggestion) => (
-							<SuggestionItem
-								key={suggestion}
-								onClick={handleSuggestionClick}
-								suggestion={suggestion}
-							/>
-						))}
-					</Suggestions>
+					{activeDemo === "memory" ? (
+						<ScenarioCards className="px-4">
+							{memoryScenarios.map((scenario) => (
+								<ScenarioCard
+									key={scenario.id}
+									scenario={scenario}
+									onClick={handleScenarioClick}
+								/>
+							))}
+						</ScenarioCards>
+					) : (
+						<Suggestions className="px-4">
+							{suggestions.map((suggestion) => (
+								<SuggestionItem
+									key={suggestion}
+									onClick={handleSuggestionClick}
+									suggestion={suggestion}
+								/>
+							))}
+						</Suggestions>
+					)}
 					<div className="w-full px-4 pb-4">
 						<PromptInput globalDrop multiple onSubmit={handleSubmit}>
 							<PromptInputHeader>

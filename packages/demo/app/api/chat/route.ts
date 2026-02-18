@@ -13,6 +13,7 @@ import {
 } from "ai";
 import { Pool } from "pg";
 import { PgFs, TestSystemPrompt } from "pg-fs";
+import { createMemory, memorySystemPrompt } from "memory";
 import { createPTC } from "ptc";
 import { createToolSearch } from "tool-search";
 
@@ -121,6 +122,31 @@ export async function GET(req: Request) {
 		}
 	}
 
+	if (demo === "memory") {
+		try {
+			const { memory } = await getMemoryInstance();
+			let files: MemoryFileNode[] = [];
+			try {
+				const view = await memory.view("/memories");
+				files = parseMemoryListing(view);
+			} catch {
+				files = [];
+			}
+			return new Response(JSON.stringify({ files }), {
+				status: 200,
+				headers: { "Content-Type": "application/json" },
+			});
+		} catch (error) {
+			return new Response(
+				JSON.stringify({
+					error: error instanceof Error ? error.message : "Unknown error",
+					files: [],
+				}),
+				{ status: 500, headers: { "Content-Type": "application/json" } },
+			);
+		}
+	}
+
 	return new Response(JSON.stringify({ error: "Invalid demo type" }), {
 		status: 400,
 		headers: { "Content-Type": "application/json" },
@@ -136,7 +162,12 @@ export async function POST(req: Request) {
 	}: {
 		messages: UIMessage[];
 		model: string;
-		activeDemo: "pg-fs" | "tool-search" | "programmable-calls" | "skills";
+		activeDemo:
+			| "pg-fs"
+			| "tool-search"
+			| "programmable-calls"
+			| "skills"
+			| "memory";
 		usePTC?: boolean;
 	} = await req.json();
 
@@ -165,6 +196,8 @@ export async function POST(req: Request) {
 		return handlePTC(messages, modelName, usePTC ?? true);
 	} else if (demo === "skills") {
 		return handleSkills(messages, modelName);
+	} else if (demo === "memory") {
+		return handleMemory(messages, modelName);
 	} else if (demo === "basic") {
 		return handleBasic(messages, modelName);
 	} else {
@@ -457,6 +490,7 @@ async function handlePTC(
 	usePTC: boolean = true,
 ) {
 	// Initialize PTC with expense management tools
+	// @ts-ignore
 	const ptc = createPTC(ptcTools, {
 		timeout: 5000,
 		toolName: "execute_javascript",
@@ -685,6 +719,150 @@ ${skills.buildPrompt()}`,
 
 				console.log(
 					`[Skills] Continuing to step ${stepCount + 1} due to tool-calls`,
+				);
+			}
+		},
+	});
+
+	return createUIMessageStreamResponse({
+		stream,
+		consumeSseStream: () => {},
+	});
+}
+
+// Memory singleton - persists across requests during the server lifetime
+interface MemoryFileNode {
+	name: string;
+	path: string;
+	isDirectory: boolean;
+	size?: number;
+	children?: MemoryFileNode[];
+}
+
+let memoryInstance: Awaited<ReturnType<typeof createMemory>> | null = null;
+
+async function getMemoryInstance() {
+	if (!memoryInstance) {
+		memoryInstance = await createMemory({ filename: "./.memories.db" });
+	}
+	return memoryInstance;
+}
+
+function parseMemoryListing(view: string): MemoryFileNode[] {
+	const lines = view.split("\n").filter((l) => l.trim());
+	const files: MemoryFileNode[] = [];
+
+	for (const line of lines) {
+		if (line.startsWith("Here's the content of")) continue;
+
+		const indented = line.startsWith("  ");
+		const trimmed = line.trim();
+
+		if (!indented) {
+			if (trimmed.endsWith("/")) {
+				const name = trimmed.slice(0, -1);
+				files.push({
+					name,
+					path: `/memories/${name}`,
+					isDirectory: true,
+					children: [],
+				});
+			} else {
+				const match = trimmed.match(/^(.+?)\s+\([\d.]+[BKMG]\)$/);
+				const name = match ? match[1] : trimmed;
+				files.push({
+					name,
+					path: `/memories/${name}`,
+					isDirectory: false,
+				});
+			}
+		} else {
+			const parent = files[files.length - 1];
+			if (parent?.isDirectory) {
+				if (trimmed.endsWith("/")) {
+					const name = trimmed.slice(0, -1);
+					parent.children = parent.children || [];
+					parent.children.push({
+						name,
+						path: `${parent.path}/${name}`,
+						isDirectory: true,
+					});
+				} else {
+					const match = trimmed.match(/^(.+?)\s+\([\d.]+[BKMG]\)$/);
+					const name = match ? match[1] : trimmed;
+					parent.children = parent.children || [];
+					parent.children.push({
+						name,
+						path: `${parent.path}/${name}`,
+						isDirectory: false,
+					});
+				}
+			}
+		}
+	}
+
+	return files;
+}
+
+async function handleMemory(messages: UIMessage[], modelName: string) {
+	const { tools, systemPrompt } = await getMemoryInstance();
+
+	const xmessages = await convertToModelMessages(messages);
+
+	const stream = createUIMessageStream<UIMessage<UsageEvent>>({
+		execute: async ({ writer }) => {
+			const maxSteps = 15;
+			let stepCount = 0;
+
+			while (stepCount < maxSteps) {
+				stepCount++;
+
+				const result = streamText({
+					model: lmstudio(modelName),
+					system: systemPrompt,
+					messages: xmessages,
+					tools: tools as any,
+					onStepFinish: async ({ usage }) => {
+						writer.write({
+							type: "data-usage",
+							data: usage,
+						} as UsageEvent);
+					},
+					onFinish: async ({ usage }) => {
+						writer.write({
+							type: "data-usage",
+							data: usage,
+						} as UsageEvent);
+					},
+				});
+
+				result.consumeStream();
+
+				await new Promise<void>((resolve, reject) => {
+					writer.merge(
+						result.toUIMessageStream({
+							sendReasoning: true,
+							onFinish: () => {
+								resolve();
+							},
+							onError: (error) => {
+								reject(error);
+								return "error";
+							},
+						}),
+					);
+				});
+
+				const finishReason = await result.finishReason;
+				if (finishReason !== "tool-calls") {
+					break;
+				}
+
+				const ymessages = (await result.response).messages;
+				xmessages.push(...ymessages);
+
+				console.log(
+					`[Memory] Continuing to step ${stepCount + 1} due to tool-calls`,
 				);
 			}
 		},
